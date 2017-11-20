@@ -90,6 +90,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
+      <AdditionalIncludeDirectories>..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.61.1\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,6 +106,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
+      <AdditionalIncludeDirectories>..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.61.1\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -120,6 +124,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
+      <AdditionalIncludeDirectories>..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.61.1\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,6 +144,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
+      <AdditionalIncludeDirectories>..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.61.1\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,6 +156,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AntilatencyVulkan.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\AntilatencyVulkan\AntilatencyVulkan.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkCreateInstance.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkDestroyInstance.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkEnumerateInstanceExtensionProperties.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkEnumerateInstanceLayerProperties.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkGetInstanceProcAddr.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Functions\VulkanFunction.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\LibraryLoader.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanFunctionGroup.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanInstance.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanInstanceFactory.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
