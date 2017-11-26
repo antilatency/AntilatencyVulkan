@@ -9,29 +9,34 @@ public:
 	InstanceFactory* factory = nullptr;
 	VkInstance instance = nullptr;
 public:
-	VulkanInstance() {}
+	constexpr VulkanInstance() {}
 
-	VulkanInstance(const VulkanInstance&) = delete;
-	VulkanInstance& operator=(const VulkanInstance&) = delete;
-
-	void move(VulkanInstance&& r) {
-		instance = r.instance;
-		factory = r.factory;
-
-		r.instance = nullptr;
-		r.factory = nullptr;
+	VulkanInstance(InstanceFactory& factory, bool debug = false) : factory(&factory) {
+		if (debug)
+			instance = this->factory->get<vkCreateInstance>().debug();
+		else
+			instance = this->factory->get<vkCreateInstance>().default();
+		if (instance) loadAllFunctions(this->factory, instance);
 	}
-
+private:
+	VulkanInstance(const VulkanInstance&) = default;// = delete;
+	VulkanInstance& operator=(const VulkanInstance&) = default;
+	
+public:
 	VulkanInstance(VulkanInstance&& r) {
-		move(std::move(r));
+		static constexpr VulkanInstance zero = VulkanInstance();
+		*this = r;
+		r = zero;
 	}
 	VulkanInstance& operator=(VulkanInstance&& r) {
-		move(std::move(r));
+		static constexpr VulkanInstance zero = VulkanInstance();
+		*this = r;
+		r = zero;
 		return *this;
 	}
 
 	VulkanInstance(InstanceFactory* factory , VkInstance instance, bool autoLoad = true): factory(factory), instance(instance){
-		load(factory, instance);
+		if (autoLoad) loadAllFunctions(factory, instance);
 	}
 
 

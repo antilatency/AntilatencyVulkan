@@ -4,7 +4,7 @@
 
 class vkEnumerateInstanceExtensionProperties : public VulkanFunction<PFN_vkEnumerateInstanceExtensionProperties> {
 public:
-	char* getName() override { return "vkEnumerateInstanceExtensionProperties"; }
+    const char* getName() override { return "vkEnumerateInstanceExtensionProperties"; }
 
 	template<typename Host>
 	void load(Host* host, void*) {

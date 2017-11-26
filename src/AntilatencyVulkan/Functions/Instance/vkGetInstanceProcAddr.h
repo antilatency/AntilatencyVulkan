@@ -4,7 +4,7 @@
 
 class vkGetInstanceProcAddr : public VulkanFunction<PFN_vkGetInstanceProcAddr> {
 public:
-	char* getName() override { return "vkGetInstanceProcAddr"; }
+    const char* getName() override { return "vkGetInstanceProcAddr"; }
 	template<typename Context>
 	void load(Context* context, void*) {
 		function = (Prototype)context->library.getFunction(getName());

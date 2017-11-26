@@ -12,34 +12,34 @@ public:
 
 	template<typename ...T>
 	friend class VulkanFunctionGroup;
-protected:
-	template<typename Context, int ID = 0>
-	void load(Context* context, void* instance) {
+private:
+	template<typename Context, int ID>
+	void _loadAllFunctions(Context* context, void* instance) {
 		if constexpr (ID < std::tuple_size<FunctionsTuple>()) {
 			auto& f = std::get<ID>(functions);
 			f.load(context, instance);
-			load<Context,ID + 1>(context, instance);
+			_loadAllFunctions<Context,ID + 1>(context, instance);
 		}
 	}
 public:
 	template<typename Context>
-	void loadAll(Context* context, void* instance) {
-		load<Context,0>(context, instance);
+	void loadAllFunctions(Context* context, void* instance) {
+		_loadAllFunctions<Context,0>(context, instance);
 	}
 
-protected:
+private:
 	template<int ID = 0>
-	bool isAllFunctionsLoaded() {
+	bool _isAllFunctionsLoaded() {
 		if constexpr (ID < std::tuple_size<FunctionsTuple>()) {
 			auto& f = std::get<ID>(functions);
 			if (!f) return false;
-			return isAllFunctionsLoaded<ID + 1>();
+			return _isAllFunctionsLoaded<ID + 1>();
 		}
 		return true;
 	}
 public:
 	bool isAllFunctionsLoaded() {
-		return isAllFunctionsLoaded<0>();
+		return _isAllFunctionsLoaded<0>();
 	}
 
 };

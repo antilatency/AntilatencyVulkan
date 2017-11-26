@@ -4,7 +4,7 @@ class VulkanFunction {
 public:
 	using Prototype = Prototype_;
 	Prototype function = nullptr;
-	virtual char* getName() = 0;
+    virtual const char* getName() = 0;
 	void* getFunctionPointer() { return (void*)function; }
 	/*bool isAvailable() {
 		return pointer != nullptr;

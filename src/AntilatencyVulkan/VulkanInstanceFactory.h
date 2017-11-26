@@ -25,11 +25,15 @@ public:
 public:
 	void load() {
 		library = Library("vulkan-1");
-		this->loadAll(this,nullptr);
+		this->loadAllFunctions(this,nullptr);
 	}
 
 	VulkanInstance<VulkanInstanceFactory> createInstanceDefault() {
-		VulkanInstance<VulkanInstanceFactory> result(this, get<vkCreateInstance>().default());
-		return result;
+		return VulkanInstance<VulkanInstanceFactory>(this, get<vkCreateInstance>().default());
 	}
+	
+	VulkanInstance<VulkanInstanceFactory> createInstanceDebug() {
+		return VulkanInstance<VulkanInstanceFactory>(this, get<vkCreateInstance>().debug());
+	}
+
 };

@@ -3,7 +3,7 @@
 
 class vkDestroyInstance : public VulkanFunction<PFN_vkDestroyInstance> {
 public:
-	char* getName() override { return "vkDestroyInstance"; }
+    const char* getName() override { return "vkDestroyInstance"; }
 
 	template<typename Context>
 	void load(Context* context, void* instance) {
