@@ -13,18 +13,19 @@ public:
 	template<typename ...T>
 	friend class VulkanFunctionGroup;
 private:
-	template<typename Context, int ID>
-	void _loadAllFunctions(Context* context, void* instance) {
+	template<typename LoaderFunction, int ID, typename ... AdditionalParameters>
+	void _load(LoaderFunction loaderFunction, AdditionalParameters... additionalParameters) {
 		if constexpr (ID < std::tuple_size<FunctionsTuple>()) {
 			auto& f = std::get<ID>(functions);
-			f.load(context, instance);
-			_loadAllFunctions<Context,ID + 1>(context, instance);
+			f.load(loaderFunction, additionalParameters...);
+			//
+			_load<LoaderFunction,ID + 1>(loaderFunction, additionalParameters...);
 		}
 	}
 public:
-	template<typename Context>
-	void loadAllFunctions(Context* context, void* instance) {
-		_loadAllFunctions<Context,0>(context, instance);
+	template<typename LoaderFunction, typename ... AdditionalParameters>
+	void load(LoaderFunction loaderFunction, AdditionalParameters... additionalParameters) {
+		_load<LoaderFunction,0>(loaderFunction, additionalParameters...);
 	}
 
 private:

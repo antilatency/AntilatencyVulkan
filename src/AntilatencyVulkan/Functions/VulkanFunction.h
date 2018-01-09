@@ -10,6 +10,12 @@ public:
 		return pointer != nullptr;
 	}*/
 
+	/*auto operator()() {
+		return function
+	}
+*/
+
+
 	operator bool() const{
 		return function != nullptr;
 	}

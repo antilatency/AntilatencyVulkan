@@ -1,45 +1,72 @@
 #pragma once
+#include <memory>
+
 #include "VulkanInstanceFactory.h"
 
-#include "Functions/Instance/vkDestroyInstance.h"
+#include "Functions/Instance/VulkanInstanceFunctions.h"
+#include "VulkanPhysicalDevice.h"
 
-template<typename InstanceFactory>
-class VulkanInstance : public VulkanFunctionGroup<vkDestroyInstance>{
-public:
-	InstanceFactory* factory = nullptr;
-	VkInstance instance = nullptr;
-public:
-	constexpr VulkanInstance() {}
 
-	VulkanInstance(InstanceFactory& factory, bool debug = false) : factory(&factory) {
-		if (debug)
-			instance = this->factory->get<vkCreateInstance>().debug();
-		else
-			instance = this->factory->get<vkCreateInstance>().default();
-		if (instance) loadAllFunctions(this->factory, instance);
-	}
+class VulkanInstance :public RefCounter{
+	friend class Ref<VulkanInstance>;
 private:
-	VulkanInstance(const VulkanInstance&) = default;// = delete;
-	VulkanInstance& operator=(const VulkanInstance&) = default;
-	
+	//using 
+	const AbstractRef factory;
+	VkInstance instance = nullptr;
+	VulkanInstanceFunctions instanceFunctions;
+	VulkanPhysicalDeviceFunctions physicalDeviceFunctions;
+
+	std::vector<VulkanPhysicalDevice> physicalDevices;
+
 public:
-	VulkanInstance(VulkanInstance&& r) {
-		static constexpr VulkanInstance zero = VulkanInstance();
-		*this = r;
-		r = zero;
-	}
-	VulkanInstance& operator=(VulkanInstance&& r) {
-		static constexpr VulkanInstance zero = VulkanInstance();
-		*this = r;
-		r = zero;
-		return *this;
+	
+	VulkanInstance(
+		const AbstractRef& factory,
+		VkInstance instance,
+		const VulkanInstanceFunctions& instanceFunctions,
+		const VulkanPhysicalDeviceFunctions& physicalDeviceFunctions
+	) :
+		factory(factory),
+		instance(instance),
+		instanceFunctions(instanceFunctions),
+		physicalDeviceFunctions(physicalDeviceFunctions)
+	{}
+	
+
+public:
+
+	void updatePhysicalDevices() {
+	
 	}
 
-	VulkanInstance(InstanceFactory* factory , VkInstance instance, bool autoLoad = true): factory(factory), instance(instance){
-		if (autoLoad) loadAllFunctions(factory, instance);
+
+	bool isAllFunctionsLoaded() {
+		return
+			instanceFunctions.isAllFunctionsLoaded() &&
+			physicalDeviceFunctions.isAllFunctionsLoaded();
 	}
 
+	std::vector<VulkanPhysicalDevice> enumeratePhysicalDevices() {
+		auto function = instanceFunctions.get<vkEnumeratePhysicalDevices>().function;
+		std::vector<VkPhysicalDevice> rawPhysicalDevices;
+		
+		uint32_t count = 0;
+		if (VK_SUCCESS == function(instance, &count, nullptr)) {
+			VkResult result;
+			do {
+				rawPhysicalDevices.resize(count);
+				result = function(instance, &count, rawPhysicalDevices.data());
+				if ((result != VK_SUCCESS) && (result != VK_INCOMPLETE)) return std::vector<VulkanPhysicalDevice>();
+			} while (result == VK_INCOMPLETE);
 
+		}
+
+		std::vector<VulkanPhysicalDevice> physicalDevices(rawPhysicalDevices.size());
+		for (int i = 0; i < physicalDevices.size(); i++) {
+			physicalDevices[i] = VulkanPhysicalDevice(&physicalDeviceFunctions, rawPhysicalDevices[i]);
+		}
+		return physicalDevices;
+	}
 
 
 
