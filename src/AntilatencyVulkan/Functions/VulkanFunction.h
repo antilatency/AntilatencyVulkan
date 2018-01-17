@@ -6,28 +6,27 @@ public:
 	Prototype function = nullptr;
     virtual const char* getName() = 0;
 	void* getFunctionPointer() { return (void*)function; }
-	/*bool isAvailable() {
-		return pointer != nullptr;
-	}*/
-
-	/*auto operator()() {
-		return function
-	}
-*/
-
 
 	operator bool() const{
 		return function != nullptr;
 	}
 
-
-	/*template<typename Host>
-	void load(Host* host) {
-		if constexpr (NeedInstance) {
-			if (host->instance == nullptr) return;
-		}
-		function = (Prototype)host->get<vkGetInstanceProcAddr>()(NeedInstance ? host->instance : nullptr, getName());
-	}
-	*/
-
 };
+
+#define VulkanInstanceFunction(Name) \
+class Name : public VulkanFunction<PFN_##Name> {\
+public:\
+	const char* getName() override { return #Name; }\
+	\
+	void load(PFN_vkGetInstanceProcAddr getInstanceProcAddr, VkInstance instance = nullptr) {\
+		function = (Prototype)getInstanceProcAddr(instance, getName());\
+	}
+
+#define VulkanDeviceFunction(Name) \
+class Name : public VulkanFunction<PFN_##Name> {\
+public:\
+	const char* getName() override { return #Name; }\
+	\
+	void load(PFN_vkGetDeviceProcAddr getDeviceProcAddr, VkDevice device = nullptr) {\
+		function = (Prototype)getInstanceProcAddr(instance, getName());\
+	}

@@ -2,3 +2,4 @@
 /VisualStudio/*.filters
 /VisualStudio/*.user
 /VisualStudio/x64/Debug
+/.vs

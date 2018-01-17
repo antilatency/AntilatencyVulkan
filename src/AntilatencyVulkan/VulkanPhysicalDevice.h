@@ -1,6 +1,6 @@
 #pragma once
-#include "VulkanPhysicalDeviceFunctions.h"
-#include "VulkanFunctionGroup.h"
+#include "AntilatencyVulkanCommon.h"
+
 
 
 VulkanInstanceFunction(vkGetPhysicalDeviceFeatures) };
@@ -54,38 +54,29 @@ public:
 		return result;
 	}
 
-	std::vector<VkExtensionProperties> getExtensionProperties(const char* layerName = nullptr) {
-		auto function = functions->get<vkEnumerateDeviceExtensionProperties>().function;
-		std::vector<VkExtensionProperties> result;
-		uint32_t count = 0;
-		if (VK_SUCCESS == function(physicalDevice, layerName, &count, nullptr)) {
-			VkResult r;
-			do {
-				result.resize(count);
-				r = function(physicalDevice, layerName, &count, result.data());
-				if ((r != VK_SUCCESS) && (r != VK_INCOMPLETE)) return std::vector<VkExtensionProperties>();
-			} while (r == VK_INCOMPLETE);
-
-		}
-		return result;
+	auto getExtensionProperties(const char* layerName = nullptr) {
+		return vulkanEnumerate(
+			functions->get<vkEnumerateDeviceExtensionProperties>().function,
+			physicalDevice, layerName);
 	}
+
+	auto getQueueFamilyProperties() {
+		return vulkanEnumerate(
+			functions->get<vkGetPhysicalDeviceQueueFamilyProperties>().function,
+			physicalDevice);
+	}
+
+	//GetPhysicalDeviceQueueFamilyProperties
+
 	
-
-	auto getDisplayPropertiesKHR() {
-		auto function = functions->get<vkGetPhysicalDeviceDisplayPropertiesKHR>().function;
-		std::vector<VkDisplayPropertiesKHR> result;
-		uint32_t count = 0;
-		if (VK_SUCCESS == function(physicalDevice, &count, nullptr)) {
-			VkResult r;
-			do {
-				result.resize(count);
-				r = function(physicalDevice, &count, result.data());
-				if ((r != VK_SUCCESS) && (r != VK_INCOMPLETE)) return std::vector<VkDisplayPropertiesKHR>();
-			} while (r == VK_INCOMPLETE);
-
-		}
-		return result;
+	void createDevice() {
+		/*VkDevice device;
+		auto function = functions->get<vkCreateDevice>().function;
+		VkDeviceCreateInfo createInfo;
+		createInfo.
+		function(physicalDevice,)*/
 	}
+
 
 
 	/*VkDisplayPlaneCapabilitiesKHR getDisplayPlaneCapabilities() {

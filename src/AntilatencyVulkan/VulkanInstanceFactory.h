@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "LibraryLoader.h"
-#include "VulkanFunctionGroup.h"
+#include "Functions/VulkanFunctionGroup.h"
 
 /*
 #include "Functions/Instance/vkGetInstanceProcAddr.h"
@@ -11,6 +11,16 @@
 #include "Functions/Instance/vkEnumerateInstanceExtensionProperties.h"*/
 
 #include "VulkanInstance.h"
+
+VulkanInstanceFunction(vkCreateInstance) };
+VulkanInstanceFunction(vkEnumerateInstanceLayerProperties) };
+VulkanInstanceFunction(vkEnumerateInstanceExtensionProperties) };
+using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
+	vkCreateInstance,
+	vkEnumerateInstanceLayerProperties,
+	vkEnumerateInstanceExtensionProperties
+>;
+
 
 class VulkanInstanceFactory :public RefCounter {
 private:
@@ -36,19 +46,7 @@ public:
 	}
 
 	std::vector<VkLayerProperties> enumerateLayerProperties() {
-		auto function = functions.get<vkEnumerateInstanceLayerProperties>().function;
-		std::vector<VkLayerProperties> result;
-		uint32_t count = 0;
-		if (VK_SUCCESS == function(&count, nullptr)) {
-			VkResult r;
-			do {
-				result.resize(count);
-				r = function(&count, result.data());
-				if ((r != VK_SUCCESS) && (r != VK_INCOMPLETE)) return std::vector<VkLayerProperties>();
-			} while (r == VK_INCOMPLETE);
-
-		}
-		return result;	
+		return vulkanEnumerate(functions.get<vkEnumerateInstanceLayerProperties>().function);
 	}
 
 

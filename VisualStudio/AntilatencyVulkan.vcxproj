@@ -158,20 +158,13 @@
     <ClCompile Include="AntilatencyVulkan.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\AntilatencyVulkan\AntilatencyVulkan.h" />
-    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkCreateInstance.h" />
-    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkDestroyInstance.h" />
-    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkEnumerateInstanceExtensionProperties.h" />
-    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkEnumerateInstanceLayerProperties.h" />
-    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\vkGetInstanceProcAddr.h" />
-    <ClInclude Include="..\src\AntilatencyVulkan\Functions\Instance\VulkanInstanceFunctions.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\AntilatencyVulkanCommon.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\Functions\VulkanFunction.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\LibraryLoader.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\VulkanFunctionGroup.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\VulkanInstance.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\VulkanInstanceFactory.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\VulkanPhysicalDevice.h" />
-    <ClInclude Include="..\src\AntilatencyVulkan\VulkanPhysicalDeviceFunctions.h" />
     <ClInclude Include="..\Utils\WindowWin32.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

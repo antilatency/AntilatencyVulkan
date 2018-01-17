@@ -2,9 +2,14 @@
 #include <memory>
 
 #include "VulkanInstanceFactory.h"
-
-#include "Functions/Instance/VulkanInstanceFunctions.h"
 #include "VulkanPhysicalDevice.h"
+
+VulkanInstanceFunction(vkDestroyInstance) };
+VulkanInstanceFunction(vkEnumeratePhysicalDevices) };
+using VulkanInstanceFunctions = VulkanFunctionGroup<
+	vkDestroyInstance,
+	vkEnumeratePhysicalDevices
+>;
 
 
 class VulkanInstance :public RefCounter{
@@ -14,6 +19,7 @@ private:
 	const AbstractRef factory;
 	VkInstance instance = nullptr;
 	VulkanInstanceFunctions instanceFunctions;
+
 	VulkanPhysicalDeviceFunctions physicalDeviceFunctions;
 
 	std::vector<VulkanPhysicalDevice> physicalDevices;
@@ -35,9 +41,6 @@ public:
 
 public:
 
-	void updatePhysicalDevices() {
-	
-	}
 
 
 	bool isAllFunctionsLoaded() {
@@ -47,19 +50,11 @@ public:
 	}
 
 	std::vector<VulkanPhysicalDevice> enumeratePhysicalDevices() {
-		auto function = instanceFunctions.get<vkEnumeratePhysicalDevices>().function;
-		std::vector<VkPhysicalDevice> rawPhysicalDevices;
 		
-		uint32_t count = 0;
-		if (VK_SUCCESS == function(instance, &count, nullptr)) {
-			VkResult result;
-			do {
-				rawPhysicalDevices.resize(count);
-				result = function(instance, &count, rawPhysicalDevices.data());
-				if ((result != VK_SUCCESS) && (result != VK_INCOMPLETE)) return std::vector<VulkanPhysicalDevice>();
-			} while (result == VK_INCOMPLETE);
+		auto rawPhysicalDevices = vulkanEnumerate(
+			instanceFunctions.get<vkEnumeratePhysicalDevices>().function,
+			instance);
 
-		}
 
 		std::vector<VulkanPhysicalDevice> physicalDevices(rawPhysicalDevices.size());
 		for (int i = 0; i < physicalDevices.size(); i++) {
