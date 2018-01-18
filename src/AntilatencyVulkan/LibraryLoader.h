@@ -1,12 +1,13 @@
 #pragma once
-#include<string>
+
+#include <string>
 
 #if defined(_WIN32)
-#include <windows.h>
+#   include <Windows.h>
 #elif defined(__ANDROID__) || defined(__linux__)
-#include <dlfcn.h>
+#   include "dlfcn.h"
 #else
-#error unsupported os
+#   error unsupported os
 #endif
 
 
@@ -14,8 +15,6 @@
 class Library {
 private:
 	void* handle = nullptr;
-
-
 
 public:
 	Library() {}
@@ -25,7 +24,7 @@ public:
 	Library(Library&& r){
 		handle = r.handle;
 		r.handle = nullptr;
-	};
+    }
 	
 	Library& operator=(Library&& r) {
 		handle = r.handle;
@@ -41,7 +40,9 @@ public:
 		handle = (void*)LoadLibraryA(sName.c_str());
 	#else
 		sName += ".so";
-		return dlopen(sDllName.c_str(), iMode);
+        //auto iMode = RTLD_LAZY; //this mode allows deffered symbol resolving
+        auto iMode = RTLD_NOW | RTLD_LOCAL;
+        handle = reinterpret_cast<void*>( dlopen(sName.c_str(), iMode) );
 	#endif
 	}
 

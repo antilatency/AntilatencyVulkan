@@ -1,69 +1,28 @@
-#include <QGuiApplication>
+#include <QCoreApplication>
 #include <QWindow>
 #include <QSurface>
 
 #include <QDebug>
 
+#include <VulkanInstanceFactory.h>
 
-#include "../../src/AntilatencyVulkan/AntilatencyVulkan.h"
+int main(int argc, char *argv[]) {
 
-VulkanInstanceFactory factory;
-VulkanInstance<VulkanInstanceFactory> instance(factory);
+    auto instanceFactory = VulkanInstanceFactory::create();
 
-
-class VulkanWindow : public QWindow{
-public:
-	VulkanWindow() {
-		setSurfaceType(VulkanSurface);
-	}
-
-	void exposeEvent(QExposeEvent *) {
-		if (isExposed()) {
-			if (!_initialized) {
-				_initialized = true;
-				// initialize device, swapchain, etc.
-				//QVulkanInstance *inst = vulkanInstance();
-				//QVulkanFunctions *f = inst->functions();
+    auto instanceExtensions = instanceFactory->enumerateExtensionProperties();
+    qDebug() << "Instance extensions: ";
+    for (const auto ie : instanceExtensions) {
+        qDebug() << ie.extensionName;
+    }
 
 
-				//setVulkanInstance(QVulkanInstance() instance.instance);
-				//uint32_t devCount = 0;
-				//f->vkEnumeratePhysicalDevices(inst->vkInstance(), &devCount, nullptr);
+    QCoreApplication a(argc, argv);
 
-				//auto surface = surfaceHandle();
+    //VulkanWindow window;
 
-				// build the first frame
-				render();
-			}
-		}
-	}
-
-	bool event(QEvent *e) {
-		if (e->type() == QEvent::UpdateRequest)
-			render();
-		return QWindow::event(e);
-	}
-
-	void render() {
-	   qDebug()<<"render";
-	   requestUpdate(); // render continuously
-	}
-
-private:
-	bool _initialized = false;
-};
-
-
-
-int main(int argc, char *argv[]){
-
-	QGuiApplication a(argc, argv);
-
-	VulkanWindow window;
-
-	window.create();
-	window.show();
-
+    //window.create();
+    //window.show();
 
 	//window.setSurfaceType(QSurface::VulkanSurface);
 	//window.isExposed()

@@ -1,12 +1,22 @@
-QT += core
-QT += gui
-
-#CONFIG += c++17
-QMAKE_CXXFLAGS += -std:c++17
-
-
 TARGET = AntilatencyVulkan
-INCLUDEPATH += C:\VulkanSDK\1.0.61.1\Include\vulkan
+
+QT += core #gui
+
+include(../../src/AntilatencyVulkan.pri)
+
+#CONFIG += c++14
+
+win32:msvc* {
+    QMAKE_CXXFLAGS += -std:c++17
+}
+
+android {
+    QMAKE_CXXFLAGS += -std=c++17
+    #make clang code model happy
+    DEFINES += __ANDROID__
+}
+
+INCLUDEPATH += $(VULKAN_SDK)\Include\vulkan
 
 CONFIG -= vulkan
 CONFIG += console

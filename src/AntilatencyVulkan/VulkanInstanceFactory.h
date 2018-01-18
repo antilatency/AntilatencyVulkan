@@ -15,6 +15,7 @@
 VulkanInstanceFunction(vkCreateInstance) };
 VulkanInstanceFunction(vkEnumerateInstanceLayerProperties) };
 VulkanInstanceFunction(vkEnumerateInstanceExtensionProperties) };
+
 using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
 	vkCreateInstance,
 	vkEnumerateInstanceLayerProperties,
@@ -27,11 +28,16 @@ private:
 	Library library;
 	PFN_vkGetInstanceProcAddr loaderFunction;
 
-	VulkanInstanceFactoryFunctions functions;
-
+    VulkanInstanceFactoryFunctions functions;
 
 	VulkanInstanceFactory() {
-		library = Library("vulkan-1");
+
+#if defined(_WIN32)
+        const char* libraryName = "vulkan-1";
+#elif defined(__ANDROID__) || defined(__linux__)
+        const char* libraryName = "libvulkan";
+#endif
+        library = Library(libraryName);
 		loaderFunction = (PFN_vkGetInstanceProcAddr)library.getFunction("vkGetInstanceProcAddr");
 		functions.load(loaderFunction);
 	}
@@ -49,6 +55,10 @@ public:
 		return vulkanEnumerate(functions.get<vkEnumerateInstanceLayerProperties>().function);
 	}
 
+	std::vector<VkExtensionProperties> enumerateExtensionProperties() {
+		return vulkanEnumerate(functions.get<vkEnumerateInstanceExtensionProperties>().function, nullptr);
+	}
+	
 
 	static const VkInstanceCreateInfo getDefaultCreateInfo() {
 		VkInstanceCreateInfo result;
@@ -70,6 +80,8 @@ public:
 		result.ppEnabledLayerNames = layerNames;
 		return result;
 	}
+
+
 
 	auto createInstance(const VkInstanceCreateInfo& createInfo, const VkAllocationCallbacks* pAllocator = nullptr) {
 		VkInstance instance;

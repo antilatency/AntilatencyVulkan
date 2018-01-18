@@ -2,12 +2,15 @@
 #define VK_NO_PROTOTYPES
 #include "vulkan.h"
 
+#include <tuple>
+#include <vector>
+
 template < class T>
 class Ref;
 template < class T>
 auto makeRef(T* object);
 
-template<typename T>
+template<class T>
 class Ref {
 private:
 	T* pointer = nullptr;
@@ -50,7 +53,7 @@ class RefCounter {
 protected:
 	friend class Ref<RefCounter>; //For AbstractRef
 	int refCount = 0;
-	RefCounter() {};
+    RefCounter() {}
 	virtual ~RefCounter() {}
 
 	void AddRef() {
@@ -71,9 +74,10 @@ using AbstractRef = Ref<RefCounter>;
 
 template<typename ... Args, typename ... EnumeratorArgs>
 auto vulkanEnumerate(VkResult(VKAPI_PTR *enumerator)(EnumeratorArgs...enumeratorArgs), Args...args) {
-	using Tuple = std::tuple<EnumeratorArgs...>;
-	using ResultType = std::remove_pointer<
-		std::tuple_element<std::tuple_size<Tuple>::value - 1, Tuple>::type
+    using Tuple = std::tuple<EnumeratorArgs...>;
+
+    using ResultType = typename std::remove_pointer<
+        typename std::tuple_element<std::tuple_size<Tuple>::value - 1, Tuple>::type
 	>::type;
 	std::vector<ResultType> result;
 
@@ -93,8 +97,8 @@ auto vulkanEnumerate(VkResult(VKAPI_PTR *enumerator)(EnumeratorArgs...enumerator
 template<typename ... Args, typename ... EnumeratorArgs>
 auto vulkanEnumerate(void(VKAPI_PTR *enumerator)(EnumeratorArgs...enumeratorArgs), Args...args) {
 	using Tuple = std::tuple<EnumeratorArgs...>;
-	using ResultType = std::remove_pointer<
-		std::tuple_element<std::tuple_size<Tuple>::value - 1, Tuple>::type
+    using ResultType = typename std::remove_pointer<
+        typename std::tuple_element<std::tuple_size<Tuple>::value - 1, Tuple>::type
 	>::type;
 
 	uint32_t count = 0;
