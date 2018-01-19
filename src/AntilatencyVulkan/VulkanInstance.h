@@ -12,12 +12,13 @@ using VulkanInstanceFunctions = VulkanFunctionGroup<
 >;
 
 
-class VulkanInstance :public RefCounter{
+class VulkanInstance : public RefCounter{
 	friend class Ref<VulkanInstance>;
+public:
+	VkInstance instance = VK_NULL_HANDLE;
 private:
 	//using 
 	const AbstractRef factory;
-	VkInstance instance = nullptr;
 	VulkanInstanceFunctions instanceFunctions;
 
 	VulkanPhysicalDeviceFunctions physicalDeviceFunctions;
@@ -40,9 +41,7 @@ public:
 	
 
 public:
-
-
-
+	
 	bool isAllFunctionsLoaded() {
 		return
 			instanceFunctions.isAllFunctionsLoaded() &&
@@ -66,3 +65,5 @@ public:
 
 
 };
+
+using VulkanInstanceRef = Ref<VulkanInstance>;
