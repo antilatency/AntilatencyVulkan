@@ -4,6 +4,7 @@
 class Window {
 public:
 	HWND handle = 0;
+	HINSTANCE inst = 0;
 
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 		Window* _this = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -28,10 +29,10 @@ public:
 		}
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
-	static constexpr wchar_t* getWindowClassName() {
-		constexpr wchar_t* name = L"Antilatency";
-		return name;
-	}
+        static const wchar_t* getWindowClassName() {
+                //constexpr wchar_t* name = L"Antilatency";
+                return L"Antilatency";
+        }
 	static void registerWindowClass(HINSTANCE instance) {
 		WNDCLASS wc = {};
 		wc.lpfnWndProc = WindowProc;
@@ -41,6 +42,9 @@ public:
 	}
 	
 	Window(HINSTANCE instance) {
+
+		inst = instance;
+
 		registerWindowClass(instance);
 
 		handle	= CreateWindowEx(

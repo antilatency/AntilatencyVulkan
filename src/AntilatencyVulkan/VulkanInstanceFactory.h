@@ -27,6 +27,15 @@ using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
 	vkEnumerateInstanceExtensionProperties
 >;
 
+template<class SetType>
+void merge_sets(SetType& first, const SetType& last) {
+    first.insert(last.begin(), last.end());
+//    std::transform(last.begin(), last.end(), std::inserter(first),
+//        [](const auto& c_str) {
+//            return std::string(c_str);
+//        });
+};
+
 
 //Forward declaration
 class VulkanInstanceFactory;
@@ -42,11 +51,13 @@ public:
 
 	template<class ...T>
 	VulkanInstanceBuilder& enableExtensions() {
-		_enabledExtensions.insert(std::string(T::getInstanceExtensionName()...));
+        //_enabledExtensions.insert(std::string(T::getInstanceExtensionName()...));
+        //_enabledExtensions.insert(std::string(T::getInstanceExtensionName()...));
+        merge_sets(_enabledExtensions, T::getInstanceExtensionName()...);
 		return *this;
 	}
 
-	VulkanInstanceRef createInstance();
+	Ref<VulkanInstance> createInstance();
 
 	~VulkanInstanceBuilder() = default;
 
@@ -172,7 +183,7 @@ public:
 		VulkanPhysicalDeviceFunctions physicalDeviceFunctions;
 		physicalDeviceFunctions.load(loaderFunction, instance);
 
-		return Ref<VulkanInstance>(new VulkanInstance(AbstractRef(this), instance, instanceFunctions, physicalDeviceFunctions));
+		return Ref<VulkanInstance>(new VulkanInstance(AbstractRef(this), instance, instanceFunctions, physicalDeviceFunctions, loaderFunction));
 
 		//return VulkanInstance<VulkanInstanceFactory>::create(Ref<VulkanInstanceFactory>(this), instance);
 
@@ -185,7 +196,7 @@ using VulkanInstanceFactoryRef = Ref<VulkanInstanceFactory>;
 
 
 
-inline VulkanInstanceRef VulkanInstanceBuilder::createInstance() {
+inline Ref<VulkanInstance> VulkanInstanceBuilder::createInstance() {
 	VkInstanceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 
@@ -194,6 +205,8 @@ inline VulkanInstanceRef VulkanInstanceBuilder::createInstance() {
 		[](const auto& str) {
 			return str.c_str();
 		});
+
+    extensions.push_back("VK_KHR_win32_surface");
 	createInfo.enabledExtensionCount = extensions.size();
 	createInfo.ppEnabledExtensionNames = extensions.data();
 
