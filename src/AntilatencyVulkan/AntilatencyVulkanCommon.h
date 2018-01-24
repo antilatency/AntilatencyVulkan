@@ -35,7 +35,8 @@ public:
 		pointer->AddRef();
 	}
 
-	T* operator -> () { return pointer; }
+	T* operator -> () const { return pointer; }
+	T* ptr() const { return pointer; }
 
 	~Ref() {
 		pointer->Release();
@@ -110,10 +111,35 @@ auto vulkanEnumerate(void(VKAPI_PTR *enumerator)(EnumeratorArgs...enumeratorArgs
 	return result;
 }
 
+template<class U>
+Ref<U> ref_dynamic_cast(const Ref<RefCounter>& ref) {
+	return Ref<U>(dynamic_cast<U*>(ref.operator->()));
+}
 
 
-#include "Functions/VulkanFunctionGroup.h"
-#include "Functions/VulkanFunction.h"
+template<class U, class T>
+Ref<U> ref_dynamic_cast(const Ref<T>& ref) {
+	//TODO: assert(rawPointer, "invalid cast")?
+	return Ref<U>(dynamic_cast<U*>(ref.operator->()));
+}
 
-#include "VulkanInstanceFactory.h"
-#include "VulkanInstance.h"
+
+template<class U, class T>
+Ref<U> ref_is(const Ref<T>& ref) {
+	return ( dynamic_cast<U*>(ref.operator->()) != nullptr );
+}
+
+
+template<class T, class U>
+Ref<T> ref_static_cast(const Ref<U>& ref) {
+	return Ref<T>( static_cast<T*>(ref.operator->()) );
+}
+
+
+
+
+//#include "Functions/VulkanFunctionGroup.h"
+//#include "Functions/VulkanFunction.h"
+//
+//#include "VulkanInstanceFactory.h"
+//#include "VulkanInstance.h"

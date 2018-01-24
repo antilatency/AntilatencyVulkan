@@ -1,24 +1,27 @@
 #pragma once
 #include <memory>
+#include <cassert>
 
 #include "VulkanInstanceFactory.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanSurface.h"
+#include "InstanceExtensions/InstanceExtensionTags.h"
 
 VulkanInstanceFunction(vkDestroyInstance) };
 VulkanInstanceFunction(vkEnumeratePhysicalDevices) };
-VulkanInstanceFunction(vkCreateWin32SurfaceKHR) };
 
 using VulkanInstanceFunctions = VulkanFunctionGroup<
     vkDestroyInstance,
-    vkEnumeratePhysicalDevices,
-
-    vkCreateWin32SurfaceKHR
+    vkEnumeratePhysicalDevices
 >;
 
 
 class VulkanInstance : public RefCounter{
     friend class Ref<VulkanInstance>;
+	
+	using InstanceExtensionContainer = std::vector< Ref<InstanceExtension> >;
+	using VulkanNativeExtensionsContainer = std::vector< std::string >;
+
 public:
     VkInstance instance = VK_NULL_HANDLE;
 private:
@@ -30,22 +33,24 @@ private:
 
     std::vector<VulkanPhysicalDevice> physicalDevices;
 
-    PFN_vkGetInstanceProcAddr loaderFunction;
+	InstanceExtensionContainer enabledExtensions;
+	VulkanNativeExtensionsContainer vulkanExtensions;
 
 public:
 
     VulkanInstance(
         const AbstractRef& factory,
         VkInstance instance,
+		std::vector<std::string> vkExtensions,
         const VulkanInstanceFunctions& instanceFunctions,
         const VulkanPhysicalDeviceFunctions& physicalDeviceFunctions,
         PFN_vkGetInstanceProcAddr loaderFunc
     ) :
         factory(factory),
         instance(instance),
+		vulkanExtensions(vkExtensions),
         instanceFunctions(instanceFunctions),
-        physicalDeviceFunctions(physicalDeviceFunctions),
-        loaderFunction(loaderFunc)
+        physicalDeviceFunctions(physicalDeviceFunctions)
     {}
 
 
@@ -71,29 +76,34 @@ public:
         return physicalDevices;
     }
 
-    template<typename T, typename... Args>
-    Ref<T> get(Args... args);
+	template<class T>
+	auto get() {
+		constexpr bool isInstanceExtension = std::is_base_of<InstanceExtension, T>::value;
+		static_assert(isInstanceExtension, "T is not an InstanceExtension derived class");
 
-#ifdef VK_USE_PLATFORM_WIN32_KHR
-    template<>
-    Ref<VulkanSurface> get<VulkanSurface>(HINSTANCE winInstance, HWND hwnd) {
-        VkWin32SurfaceCreateInfoKHR createInfo = {};
+		for (const auto& enabledExtension : enabledExtensions) {
+			if (enabledExtension->extensionTypeId() == T::extensionTypeIdStatic()) {
+				return ref_static_cast<T>(enabledExtension);
+			}
+		}
 
-        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hinstance = winInstance;
-        createInfo.hwnd = hwnd;
+		//assert(false && "Suitable instance extension is not declared in create info ");
 
-        VkSurfaceKHR surface;
-        auto createSurfaceFunc = instanceFunctions.get<vkCreateWin32SurfaceKHR>().function;
-        createSurfaceFunc(instance, &createInfo, nullptr, &surface);
+		//if not found -> create
+		auto requiredExtensions = T::requiredExtensionNamesStatic();
+		for (const auto& e : requiredExtensions) {
+			auto extensionEnabled = std::find(vulkanExtensions.begin(), vulkanExtensions.end(), std::string(e)) != vulkanExtensions.end();
+			if (extensionEnabled == false) {
+				assert(false && "Suitable instance extension is not enabled");
+			}
+		}
 
-        VulkanSurfaceFunctions surfaceFunctions;
-        surfaceFunctions.load(loaderFunction, instance);
+		auto e = T::create(Ref<VulkanInstance>(this));
+		enabledExtensions.push_back(ref_static_cast<InstanceExtension>(e));
+		return e;
+	}
 
-        return Ref<VulkanSurface>( new VulkanSurface(Ref<VulkanInstance>(this), surface, surfaceFunctions) );
-    }
-#endif
-
+	auto getFactory() {
+		return factory;
+	}
 };
-
-//using VulkanInstanceRef = Ref<VulkanInstance>;

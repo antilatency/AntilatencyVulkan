@@ -27,8 +27,8 @@ using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
 	vkEnumerateInstanceExtensionProperties
 >;
 
-template<class SetType>
-void merge_sets(SetType& first, const SetType& last) {
+template<class SetType, class ContainerType>
+void merge_sets(SetType& first, const ContainerType& last) {
     first.insert(last.begin(), last.end());
 //    std::transform(last.begin(), last.end(), std::inserter(first),
 //        [](const auto& c_str) {
@@ -53,7 +53,7 @@ public:
 	VulkanInstanceBuilder& enableExtensions() {
         //_enabledExtensions.insert(std::string(T::getInstanceExtensionName()...));
         //_enabledExtensions.insert(std::string(T::getInstanceExtensionName()...));
-        merge_sets(_enabledExtensions, T::getInstanceExtensionName()...);
+        merge_sets(_enabledExtensions, T::requiredExtensionNamesStatic()...);
 		return *this;
 	}
 
@@ -183,10 +183,16 @@ public:
 		VulkanPhysicalDeviceFunctions physicalDeviceFunctions;
 		physicalDeviceFunctions.load(loaderFunction, instance);
 
-		return Ref<VulkanInstance>(new VulkanInstance(AbstractRef(this), instance, instanceFunctions, physicalDeviceFunctions, loaderFunction));
+		std::vector<std::string> vkExtensions = { createInfo.ppEnabledExtensionNames, createInfo.ppEnabledExtensionNames + createInfo.enabledExtensionCount };
+
+		return Ref<VulkanInstance>(new VulkanInstance(AbstractRef(this), instance, vkExtensions, instanceFunctions, physicalDeviceFunctions, loaderFunction));
 
 		//return VulkanInstance<VulkanInstanceFactory>::create(Ref<VulkanInstanceFactory>(this), instance);
 
+	}
+
+	auto getLoaderFunction() {
+		return loaderFunction;
 	}
 	
 };
@@ -206,7 +212,6 @@ inline Ref<VulkanInstance> VulkanInstanceBuilder::createInstance() {
 			return str.c_str();
 		});
 
-    extensions.push_back("VK_KHR_win32_surface");
 	createInfo.enabledExtensionCount = extensions.size();
 	createInfo.ppEnabledExtensionNames = extensions.data();
 
