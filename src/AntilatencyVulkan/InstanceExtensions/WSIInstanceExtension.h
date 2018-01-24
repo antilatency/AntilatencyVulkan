@@ -21,9 +21,20 @@ using WSIInstanceExtensionFunctions = VulkanFunctionGroup<
 class WSIInstanceExtension final : public InstanceExtension {
 	friend class Ref<WSIInstanceExtension>;
 public:
-	static auto requiredExtensionNamesStatic() {
-		std::array<std::string, 2> extensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+	constexpr static auto requiredExtensionNamesStatic() {
+		constexpr std::array<const char*, 2> extensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 		return extensions;
+	}
+
+	static auto canBeCreated(const std::vector<std::string>& extensions) {
+		for (const auto& requiredExt : requiredExtensionNamesStatic() ) {
+			auto extensionFound = std::find(extensions.begin(), extensions.end(), std::string(requiredExt)) != extensions.end();
+
+			if (extensionFound == false) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	static auto create(Ref<VulkanInstance>& vulkanInstance) {

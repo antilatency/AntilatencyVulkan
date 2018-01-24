@@ -8,6 +8,7 @@
 #include "Functions/VulkanFunction.h"
 #include "Functions/VulkanFunctionGroup.h"
 #include "VulkanInstanceFactory.h"
+#include "Utils/TypeList.h"
 
 /*
 #include "Functions/Instance/vkGetInstanceProcAddr.h"
@@ -21,6 +22,7 @@ VulkanInstanceFunction(vkCreateInstance) };
 VulkanInstanceFunction(vkEnumerateInstanceLayerProperties) };
 VulkanInstanceFunction(vkEnumerateInstanceExtensionProperties) };
 
+
 using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
 	vkCreateInstance,
 	vkEnumerateInstanceLayerProperties,
@@ -29,7 +31,7 @@ using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
 
 template<class SetType, class ContainerType>
 void merge_sets(SetType& first, const ContainerType& last) {
-    first.insert(last.begin(), last.end());
+	first.insert(last.begin(), last.end());
 //    std::transform(last.begin(), last.end(), std::inserter(first),
 //        [](const auto& c_str) {
 //            return std::string(c_str);
@@ -167,13 +169,9 @@ public:
 		return result;
 	}
 
-    auto createInstance(VkInstanceCreateInfo createInfo, const std::vector<const char*>& extensions = {}, const VkAllocationCallbacks* pAllocator = nullptr) {
-        //TODO: User may already specify extensions in createInfo. Expand them usin extensions array
-        if (extensions.size() != 0) {
-            createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-            createInfo.ppEnabledExtensionNames = extensions.data();
-        }
-
+	template<class Extensions = NullType>
+    auto createInstance(VkInstanceCreateInfo createInfo, const VkAllocationCallbacks* pAllocator = nullptr) {
+        
 		VkInstance instance;
 		functions.get<vkCreateInstance>().function(&createInfo, pAllocator, &instance);
 
@@ -184,11 +182,7 @@ public:
 		physicalDeviceFunctions.load(loaderFunction, instance);
 
 		std::vector<std::string> vkExtensions = { createInfo.ppEnabledExtensionNames, createInfo.ppEnabledExtensionNames + createInfo.enabledExtensionCount };
-
-		return Ref<VulkanInstance>(new VulkanInstance(AbstractRef(this), instance, vkExtensions, instanceFunctions, physicalDeviceFunctions, loaderFunction));
-
-		//return VulkanInstance<VulkanInstanceFactory>::create(Ref<VulkanInstanceFactory>(this), instance);
-
+		return Ref<VulkanInstance>(new VulkanInstance(AbstractRef(this), instance, vkExtensions, instanceFunctions, physicalDeviceFunctions, Extensions()));
 	}
 
 	auto getLoaderFunction() {
