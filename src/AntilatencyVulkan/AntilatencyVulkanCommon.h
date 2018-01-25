@@ -136,6 +136,10 @@ Ref<T> ref_static_cast(const Ref<U>& ref) {
 }
 
 
+template<typename T, typename... Args>
+Ref<T> make_ref(Args&&... args) {
+	return Ref<T>(new T(std::forward<Args>(args)...));
+}
 
 
 //#include "Functions/VulkanFunctionGroup.h"

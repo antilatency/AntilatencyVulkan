@@ -1,7 +1,19 @@
 #pragma once
+
 #include <tuple>
+
+
+class VulkanFunctionGroupBase : public RefCounter {
+	friend class Ref<VulkanFunctionGroupBase>;
+};
+
+
+
 template<typename... Functions>
-class VulkanFunctionGroup {
+class VulkanFunctionGroup : public VulkanFunctionGroupBase {
+	
+	friend class Ref< VulkanFunctionGroup >;
+
 	using FunctionsTuple = std::tuple<Functions...>;
 	FunctionsTuple functions;
 public:
