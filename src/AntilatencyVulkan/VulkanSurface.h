@@ -1,27 +1,27 @@
 #pragma once
 
 #include <AntilatencyVulkanCommon.h>
-//#include <VulkanInstance.h>
 #include <VulkanPhysicalDevice.h>
+#include "InstanceExtensions/SurfaceInstanceExtension.h"
 
 class VulkanInstance;
 
 //Declare Vulkan Surface functions 
 
-VulkanInstanceFunction(vkDestroySurfaceKHR) };
-VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceSupportKHR) };
-VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceCapabilitiesKHR) };
-VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceFormatsKHR) };
-VulkanInstanceFunction(vkGetPhysicalDeviceSurfacePresentModesKHR) };
-
-
-using VulkanSurfaceFunctions = VulkanFunctionGroup<
-    vkDestroySurfaceKHR,
-    vkGetPhysicalDeviceSurfaceSupportKHR,
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
-    vkGetPhysicalDeviceSurfaceFormatsKHR,
-    vkGetPhysicalDeviceSurfacePresentModesKHR
->;
+//VulkanInstanceFunction(vkDestroySurfaceKHR) };
+//VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceSupportKHR) };
+//VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceCapabilitiesKHR) };
+//VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceFormatsKHR) };
+//VulkanInstanceFunction(vkGetPhysicalDeviceSurfacePresentModesKHR) };
+//
+//
+//using VulkanSurfaceFunctions = VulkanFunctionGroup<
+//    vkDestroySurfaceKHR,
+//    vkGetPhysicalDeviceSurfaceSupportKHR,
+//    vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
+//    vkGetPhysicalDeviceSurfaceFormatsKHR,
+//    vkGetPhysicalDeviceSurfacePresentModesKHR
+//>;
 
 
 //class VulkanSurface;
@@ -35,14 +35,13 @@ public:
         return std::set<std::string> { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
     }
 
-    VulkanSurface(const Ref<VulkanInstance>& instanceRef, VkSurfaceKHR surface, const VulkanSurfaceFunctions& functions) :
+    VulkanSurface(const Ref<VulkanInstance>& instanceRef, 
+				  VkSurfaceKHR surface, 
+				  const Ref<SurfaceInstanceExtension>& surfaceInstanceExtension) :
 		_instanceRef(instanceRef),
 		_surface(surface),
-		_surfaceFunctions(functions)
-
+		_surfaceInstanceExtension(surfaceInstanceExtension)
 	{}
-
-    ~VulkanSurface() = default;
 
 	//auto getPhysicalDeviceFormats(const VulkanPhysicalDevice& physicalDevice) {
 	//	auto functionPtr = _surfaceFunctions.get<vkGetPhysicalDeviceSurfaceFormatsKHR>().function;
@@ -55,5 +54,6 @@ public:
 private:
     VkSurfaceKHR _surface;
 	Ref<VulkanInstance> _instanceRef;
-    VulkanSurfaceFunctions _surfaceFunctions;
+	//FIXME: Референсить только группу функций??
+	Ref<SurfaceInstanceExtension> _surfaceInstanceExtension;
 };

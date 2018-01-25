@@ -1,9 +1,9 @@
 #pragma once
 
+#include <array>
+
 #include "InstanceExtensions/InstanceExtensionTags.h"
 #include "VulkanSurface.h"
-
-#include <array>
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
@@ -17,6 +17,8 @@ using WSIInstanceExtensionFunctions = VulkanFunctionGroup<
 #	error unsupported os
 #endif
 
+
+class SurfaceInstanceExtension;
 
 class WSIInstanceExtension final : public InstanceExtension {
 	friend class Ref<WSIInstanceExtension>;
@@ -39,14 +41,15 @@ public:
 		return true;
 	}
 
-	//static auto create(Ref<VulkanInstance>& vulkanInstance) {
-	//	auto loaderFunction = ref_static_cast<VulkanInstanceFactory>(vulkanInstance->getFactory())->getLoaderFunction();
-	//	
-	//	WSIInstanceExtensionFunctions functions;
-	//	functions.load(loaderFunction, vulkanInstance->instance);
-
-	//	return Ref<WSIInstanceExtension>( new WSIInstanceExtension(vulkanInstance, functions) );
-	//}
+	static auto create(Ref<VulkanInstance>& vulkanInstanceRef, WSIInstanceExtensionFunctions* functions) {
+		auto surfaceExtensionRef = vulkanInstanceRef->get<SurfaceInstanceExtension>();
+		if (surfaceExtensionRef) {
+			return Ref<WSIInstanceExtension>( new WSIInstanceExtension(vulkanInstanceRef, functions, surfaceExtensionRef));
+		}
+		else {
+			return Ref<WSIInstanceExtension>(nullptr);
+		}
+	}
 
 	//TODO: write compile time hashing
 	static InstanceExensionTypeId extensionTypeIdStatic() {
@@ -74,10 +77,7 @@ public:
 		auto createSurfaceFunc = _functions->get<vkCreateWin32SurfaceKHR>().function;
 		createSurfaceFunc(_instanceRef->_instance, &createInfo, nullptr, &surface);
 
-        VulkanSurfaceFunctions surfaceFunctions;
-		surfaceFunctions.load(loaderFunction, _instanceRef->_instance);
-
-		return Ref<VulkanSurface>(new VulkanSurface(_instanceRef, surface, surfaceFunctions));
+		return make_ref<VulkanSurface>(_instanceRef, surface, _surfaceInstanceExtension);
 	}
 #else
 	Ref<VulkanSurface> createSurface() {
@@ -85,12 +85,16 @@ public:
 	}
 #endif
 
-public:
-	WSIInstanceExtension(const Ref<VulkanInstance>& vulkanInstance, WSIInstanceExtensionFunctions* functions) :
+private:
+	WSIInstanceExtension(const Ref<VulkanInstance>& vulkanInstance, 
+						 WSIInstanceExtensionFunctions* functions, 
+						 const Ref<SurfaceInstanceExtension>& surfaceInstanceExtension) :
 		InstanceExtension(vulkanInstance),
-		_functions(functions)
+		_functions(functions),
+		_surfaceInstanceExtension(surfaceInstanceExtension)
 	{}
 
 private:
 	WSIInstanceExtensionFunctions* _functions;
+	Ref<SurfaceInstanceExtension> _surfaceInstanceExtension;
 };

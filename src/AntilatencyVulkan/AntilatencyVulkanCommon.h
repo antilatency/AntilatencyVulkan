@@ -28,18 +28,28 @@ public:
 	}*/
 	
 	Ref(T* pointer) :pointer(pointer) {
-		pointer->AddRef();
+		if (pointer) {
+			pointer->AddRef();
+		}
 	}
 	Ref(const Ref &other) {
 		pointer = other.pointer;
-		pointer->AddRef();
+		if (pointer) {
+			pointer->AddRef();
+		}
 	}
 
 	T* operator -> () const { return pointer; }
 	T* ptr() const { return pointer; }
 
+	operator bool() const{
+		return pointer != nullptr;
+	}
+
 	~Ref() {
-		pointer->Release();
+		if (pointer) {
+			pointer->Release();
+		}
 	}
 };
 

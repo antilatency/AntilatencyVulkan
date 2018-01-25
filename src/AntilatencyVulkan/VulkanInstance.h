@@ -117,22 +117,6 @@ public:
     }
 
 
-	template<class ExtensionList>
-	std::vector< Ref<InstanceExtension> > example(const std::vector<std::string>& extensions) {
-
-		std::vector< Ref<InstanceExtension> > instanceExtensions;
-		constexpr auto max = length<ExtensionList>::value;
-
-		for (auto i = 0; i < max; i++) {
-			if (type_at<i, ExtensionList>::type::canBeCreated(extensions)) {
-				instanceExtensions.push_back(Ref<InstanceExtension>(type_at<i, ExtensionList>::type::create()));
-			}
-		}
-
-		return instanceExtensions;
-	}
-
-
 	template<class T>
 	auto get() {
 		constexpr bool isInstanceExtension = std::is_base_of<InstanceExtension, T>::value;
@@ -143,10 +127,10 @@ public:
 		if (_functionGroups.count(extensionTypeName)) {
 			auto& functionGroup = _functionGroups.at(extensionTypeName);
 			auto typeSpecificFunctionGroup = ref_static_cast<T::FunctionGroupType>(functionGroup);
-			return make_ref<T>(Ref<VulkanInstance>(this), typeSpecificFunctionGroup.operator->());
+			return T::create(Ref<VulkanInstance>(this), typeSpecificFunctionGroup.operator->());
 		}
 
-		assert(false && "Suitable instance extension is not declared in create info ");
+		return Ref<T>(nullptr);
 	}
 
 
@@ -172,7 +156,7 @@ public:
 		}
 
 		if constexpr (I > 0) {
-			auto recursivelyObtainedFunctionGroups = constructInstanceExtensions_impl<ExtensionList, I - 1>(extensions, Ref<VulkanInstance>(this));
+			auto recursivelyObtainedFunctionGroups = constructInstanceExtensions_impl<ExtensionList, I - 1>(extensions);
 			functionGroups.insert(recursivelyObtainedFunctionGroups.begin(), recursivelyObtainedFunctionGroups.end());
 		}
 
