@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "InstanceExtensions/InstanceExtensionTags.h"
+#include "InstanceExtensions/InstanceExtension.h"
 
 #include "AntilatencyVulkanCommon.h"
 #include "VulkanInstance.h"

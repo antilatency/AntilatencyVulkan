@@ -6,7 +6,7 @@
 #include "VulkanInstanceFactory.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanSurface.h"
-#include "InstanceExtensions/InstanceExtensionTags.h"
+#include "InstanceExtensions/InstanceExtension.h"
 #include "Utils/TypeList.h"
 
 VulkanInstanceFunction(vkDestroyInstance) };
@@ -118,7 +118,7 @@ public:
 
 
 	template<class T>
-	auto get() {
+	auto getExtension() {
 		constexpr bool isInstanceExtension = std::is_base_of<InstanceExtension, T>::value;
 		static_assert(isInstanceExtension, "T is not an InstanceExtension derived class");
 

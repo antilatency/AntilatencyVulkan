@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "InstanceExtensions/InstanceExtensionTags.h"
+#include "InstanceExtensions/InstanceExtension.h"
 #include "VulkanSurface.h"
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -42,7 +42,7 @@ public:
 	}
 
 	static auto create(Ref<VulkanInstance>& vulkanInstanceRef, WSIInstanceExtensionFunctions* functions) {
-		auto surfaceExtensionRef = vulkanInstanceRef->get<SurfaceInstanceExtension>();
+		auto surfaceExtensionRef = vulkanInstanceRef->getExtension<SurfaceInstanceExtension>();
 		if (surfaceExtensionRef) {
 			return Ref<WSIInstanceExtension>( new WSIInstanceExtension(vulkanInstanceRef, functions, surfaceExtensionRef));
 		}

@@ -32,40 +32,61 @@ using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
 template<class SetType, class ContainerType>
 void merge_sets(SetType& first, const ContainerType& last) {
 	first.insert(last.begin(), last.end());
-//    std::transform(last.begin(), last.end(), std::inserter(first),
-//        [](const auto& c_str) {
-//            return std::string(c_str);
-//        });
+    //std::transform(std::begin(last), std::end(last), std::inserter(first),
+    //    [](const auto& c_str) {
+    //        return std::string(c_str);
+    //    });
 };
 
 
 //Forward declaration
 class VulkanInstanceFactory;
 
-
+template<typename... Extensions>
 class VulkanInstanceBuilder
 {
 public:
-	VulkanInstanceBuilder& enableStandartDebug() {
+	auto& enableStandartDebug() {
 		_enabledLayers.insert("VK_LAYER_LUNARG_standard_validation");
 		return *this;
 	}
 
-	template<class ...T>
-	VulkanInstanceBuilder& enableExtensions() {
-        //_enabledExtensions.insert(std::string(T::getInstanceExtensionName()...));
-        //_enabledExtensions.insert(std::string(T::getInstanceExtensionName()...));
-        merge_sets(_enabledExtensions, T::requiredExtensionNamesStatic()...);
-		return *this;
+	template<class TupleType, int32_t I >
+	auto enableExtensions_impl() {
+		if constexpr(I > 0) {
+			using ExtensionType = typename std::tuple_element<I, TupleType>::type;
+			
+			merge_sets(_enabledExtensions, ExtensionType::requiredExtensionNamesStatic());
+			enableExtensions_impl<TupleType, I - 1>();
+		}
+		else if constexpr (I == 0) {
+			using ExtensionType = typename std::tuple_element<0, TupleType>::type;
+			merge_sets(_enabledExtensions, ExtensionType::requiredExtensionNamesStatic());
+		}
 	}
 
-	Ref<VulkanInstance> createInstance();
+	template<class ...T>
+	auto enableExtensions() {
+		using TupleType = std::tuple<T...>;
+		constexpr auto extensionsCount = std::tuple_size<TupleType>::value;
+
+		enableExtensions_impl<TupleType, extensionsCount - 1>();
+		return VulkanInstanceBuilder<T...>(_factory, _enabledLayers, _enabledExtensions);
+	}
+
+	auto createInstance();
 
 	~VulkanInstanceBuilder() = default;
 
 private:
-	VulkanInstanceBuilder(VulkanInstanceFactory& factory)
+	VulkanInstanceBuilder(const Ref<VulkanInstanceFactory>& factory)
 		: _factory(factory)
+	{}
+
+	VulkanInstanceBuilder(const Ref<VulkanInstanceFactory>& factory, const std::set<std::string>& enabledLayers, const std::set<std::string>& enabledExtensions) :
+		_factory(factory),
+		_enabledLayers(enabledLayers),
+		_enabledExtensions(enabledExtensions)
 	{}
 
 	VulkanInstanceBuilder(const VulkanInstanceBuilder& other) :
@@ -75,12 +96,15 @@ private:
 		_enabledExtensions = other._enabledExtensions;
 	}
 private:
-	VulkanInstanceFactory& _factory;
+	Ref<VulkanInstanceFactory> _factory;
 	std::set<std::string> _enabledLayers;
 	std::set<std::string> _enabledExtensions;
 
 private:
 	friend class VulkanInstanceFactory;
+
+	template<typename... Extensions>
+	friend class VulkanInstanceBuilder;
 };
 
 
@@ -113,8 +137,8 @@ public:
 		return Ref<VulkanInstanceFactory>(new VulkanInstanceFactory());
 	}
 
-	VulkanInstanceBuilder beginInstanceCreation() {
-		return VulkanInstanceBuilder(*this);
+	auto beginInstanceCreation() {
+		return VulkanInstanceBuilder<>(Ref<VulkanInstanceFactory>(this));
 	}
 
 	std::vector<VkLayerProperties> enumerateLayerProperties() {
@@ -195,8 +219,8 @@ using VulkanInstanceFactoryRef = Ref<VulkanInstanceFactory>;
 
 
 
-
-inline Ref<VulkanInstance> VulkanInstanceBuilder::createInstance() {
+template<typename ... Extensions>
+auto VulkanInstanceBuilder<Extensions...>::createInstance() {
 	VkInstanceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 
@@ -218,5 +242,5 @@ inline Ref<VulkanInstance> VulkanInstanceBuilder::createInstance() {
 	createInfo.enabledLayerCount = layers.size();
 	createInfo.ppEnabledLayerNames = layers.data();
 
-    return _factory.createInstance(createInfo);
+    return _factory->createInstance<TypeList<Extensions...>>(createInfo);
 }
