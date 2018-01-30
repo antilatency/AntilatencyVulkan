@@ -41,7 +41,7 @@ public:
 		return true;
 	}
 
-	static auto create(Ref<VulkanInstance>& vulkanInstanceRef, WSIInstanceExtensionFunctions* functions) {
+    static auto create(const Ref<VulkanInstance>& vulkanInstanceRef, WSIInstanceExtensionFunctions* functions) {
 		auto surfaceExtensionRef = vulkanInstanceRef->getExtension<SurfaceInstanceExtension>();
 		if (surfaceExtensionRef) {
 			return Ref<WSIInstanceExtension>( new WSIInstanceExtension(vulkanInstanceRef, functions, surfaceExtensionRef));

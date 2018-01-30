@@ -46,7 +46,7 @@ template<typename... Extensions>
 class VulkanInstanceBuilder
 {
 public:
-	auto& enableStandartDebug() {
+	auto& enableStandardDebug() {
 		_enabledLayers.insert("VK_LAYER_LUNARG_standard_validation");
 		return *this;
 	}

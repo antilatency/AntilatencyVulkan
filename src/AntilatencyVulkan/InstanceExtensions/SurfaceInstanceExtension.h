@@ -26,6 +26,7 @@ using SurfaceInstanceExtensionFunctions = VulkanFunctionGroup<
 
 class SurfaceInstanceExtension : public InstanceExtension {	
 	friend class Ref<SurfaceInstanceExtension>;
+	friend class VulkanSurface;
 public:
 	using FunctionGroupType = SurfaceInstanceExtensionFunctions;
 

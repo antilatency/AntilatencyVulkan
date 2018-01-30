@@ -127,7 +127,7 @@ public:
 		if (_functionGroups.count(extensionTypeName)) {
 			auto& functionGroup = _functionGroups.at(extensionTypeName);
 			auto typeSpecificFunctionGroup = ref_static_cast<T::FunctionGroupType>(functionGroup);
-			return T::create(Ref<VulkanInstance>(this), typeSpecificFunctionGroup.operator->());
+            return T::create(Ref<VulkanInstance>(this), typeSpecificFunctionGroup.operator->());
 		}
 
 		return Ref<T>(nullptr);
@@ -144,7 +144,7 @@ public:
 		InstanceExtensionFunctionGroupsContainer functionGroups;
 
 		using ExtensionType = typename type_at<I, ExtensionList>::type;
-		using ExtensionFunctionGroup = ExtensionType::FunctionGroupType;
+        using ExtensionFunctionGroup = typename ExtensionType::FunctionGroupType;
 
 		if (ExtensionType::canBeCreated(extensions)) {
 			Ref< ExtensionFunctionGroup > functionGroup(new ExtensionFunctionGroup);

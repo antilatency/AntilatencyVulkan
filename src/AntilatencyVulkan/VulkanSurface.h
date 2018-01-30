@@ -6,28 +6,6 @@
 
 class VulkanInstance;
 
-//Declare Vulkan Surface functions 
-
-//VulkanInstanceFunction(vkDestroySurfaceKHR) };
-//VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceSupportKHR) };
-//VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceCapabilitiesKHR) };
-//VulkanInstanceFunction(vkGetPhysicalDeviceSurfaceFormatsKHR) };
-//VulkanInstanceFunction(vkGetPhysicalDeviceSurfacePresentModesKHR) };
-//
-//
-//using VulkanSurfaceFunctions = VulkanFunctionGroup<
-//    vkDestroySurfaceKHR,
-//    vkGetPhysicalDeviceSurfaceSupportKHR,
-//    vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
-//    vkGetPhysicalDeviceSurfaceFormatsKHR,
-//    vkGetPhysicalDeviceSurfacePresentModesKHR
-//>;
-
-
-//class VulkanSurface;
-//using VulkanSurfaceRef = Ref<VulkanSurface>;
-
-
 class VulkanSurface :  public RefCounter {
     friend Ref<VulkanSurface>;
 public:
@@ -42,7 +20,30 @@ public:
 		_surface(surface),
 		_surfaceInstanceExtension(surfaceInstanceExtension)
 	{}
+	 
+	auto getPhysicalDevicePresentQueueFamiliyIndices(const VulkanPhysicalDevice& physicalDevice) {
+		std::vector<uint32_t> suitableFamilyIndices;
 
+		auto availableFamilieProperties = physicalDevice.getQueueFamilyProperties();
+		
+		assert(_surfaceInstanceExtension->_functions->isAllFunctionsLoaded() && "vkGetPhysicalDeviceSurfaceSupportKHR is not loaded");
+
+		auto checkForPresent = _surfaceInstanceExtension->_functions->get<vkGetPhysicalDeviceSurfaceSupportKHR>().function;
+
+		for (std::size_t i = 0; i < availableFamilieProperties.size(); ++i ) {
+			VkBool32 isSupported = false;
+			
+			auto result = checkForPresent(physicalDevice.physicalDevice, i, _surface ,&isSupported);
+			assert(result == VK_SUCCESS && "Could not check present support");
+
+			if (isSupported) {
+				suitableFamilyIndices.push_back(i);
+			}
+		}
+		
+		return suitableFamilyIndices;
+	}
+	
 	//auto getPhysicalDeviceFormats(const VulkanPhysicalDevice& physicalDevice) {
 	//	auto functionPtr = _surfaceFunctions.get<vkGetPhysicalDeviceSurfaceFormatsKHR>().function;
 	//	return vulkanEnumerate(
