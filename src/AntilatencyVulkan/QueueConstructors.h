@@ -1,6 +1,7 @@
 #pragma once
 
 #include "QueueConstructor.h"
+#include "QueueFamilyBox.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanSurface.h"
 
@@ -11,17 +12,31 @@ public:
 	{}
 
 	void fill(const VulkanPhysicalDevice& physicalDevice) override {
-		auto properties = physicalDevice.getQueueFamilyProperties();
+		//auto properties = physicalDevice.getQueueFamilyProperties();
 
-		for (FamilyIndex familyIndex = 0; familyIndex < properties.size(); familyIndex++) {
-			//FIXME: is that realy need to check queueCount > 0
+		//for (auto familyIndex = 0; familyIndex < properties.size(); familyIndex++) {
+		//	//FIXME: is that realy need to check queueCount > 0
+		//	auto& p = properties[familyIndex];
+		//	if (p.queueCount > 0 && p.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+		//		for (auto queueInFamilyIndex = 0; queueInFamilyIndex < p.queueCount; queueInFamilyIndex++) {
+		//			auto.insert(std::make_pair(familyIndex, queueInFamilyIndex));
+		//		}
+		//	}
+		//}
+	}
+
+	std::vector<uint32_t> suitableFamilyIndices(const VulkanPhysicalDevice& device) override {
+		auto properties = device.getQueueFamilyProperties();
+		std::vector<uint32_t> out;
+
+		for (auto familyIndex = 0; familyIndex < properties.size(); familyIndex++) {
 			auto& p = properties[familyIndex];
 			if (p.queueCount > 0 && p.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-				for (QueueIndexInFamily queueInFamilyIndex = 0; queueInFamilyIndex < p.queueCount; queueInFamilyIndex++) {
-					_queueFamilyIndices.insert(std::make_pair(familyIndex, queueInFamilyIndex));
-				}
+				out.push_back(familyIndex);
 			}
 		}
+
+		return out;
 	}
 };
 
@@ -34,18 +49,22 @@ public:
 	{}
 
     void fill(const VulkanPhysicalDevice& physicalDevice) override {
-        auto presentIndices = _surface->getPhysicalDevicePresentQueueFamiliyIndices(physicalDevice);
+        /*auto presentIndices = _surface->getPhysicalDevicePresentQueueFamiliyIndices(physicalDevice);
 		auto properties = physicalDevice.getQueueFamilyProperties();
 
-		for (FamilyIndex familyIndex = 0; familyIndex < properties.size(); familyIndex++) {
+		for (auto familyIndex = 0; familyIndex < properties.size(); familyIndex++) {
 			auto& p = properties[familyIndex];
 			if (p.queueCount > 0 && std::find(presentIndices.begin(), presentIndices.end(), familyIndex) != presentIndices.end()) {
-				for (QueueIndexInFamily queueInFamilyIndex = 0; queueInFamilyIndex < p.queueCount; queueInFamilyIndex++) {
+				for (auto queueInFamilyIndex = 0; queueInFamilyIndex < p.queueCount; queueInFamilyIndex++) {
 					_queueFamilyIndices.insert(std::make_pair(familyIndex, queueInFamilyIndex));
 				}
 			}
-		}
+		}*/
     }
+
+	std::vector<uint32_t> suitableFamilyIndices(const VulkanPhysicalDevice& device) override {
+		return _surface->getPhysicalDevicePresentQueueFamiliyIndices(device);
+	}
 
 private:
 	Ref<VulkanSurface> _surface;

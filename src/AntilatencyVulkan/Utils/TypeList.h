@@ -43,7 +43,7 @@ struct type_at<0, TypeList<Head, S...>>
 template <typename TL>
 struct length
 {
-	enum { value =  1 + length<TL::Tail>::value };
+        enum { value =  1 + length<typename TL::Tail>::value };
 };
 
 template <>

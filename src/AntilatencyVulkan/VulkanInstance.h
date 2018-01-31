@@ -4,7 +4,6 @@
 #include <map>
 
 #include "VulkanInstanceFactory.h"
-#include "VulkanPhysicalDevice.h"
 #include "VulkanSurface.h"
 #include "InstanceExtensions/InstanceExtension.h"
 #include "Utils/TypeList.h"

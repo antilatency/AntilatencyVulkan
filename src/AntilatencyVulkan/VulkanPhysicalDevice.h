@@ -1,8 +1,8 @@
 #pragma once
 
 #include "AntilatencyVulkanCommon.h"
-#include "MPLUtils.h"
 #include "QueueConstructor.h"
+#include "QueueGarden.h"
 
 
 
@@ -98,87 +98,44 @@ public:
 	//	return true;
 	//}
 
-	auto distributeQueues(std::vector<QueueConstructor*> constructors) const {
+	auto distributeQueues(std::vector<QueueConstructor*>& constructors) const {
 		//Fill all queue constructors as if the all can be the same
-		for (QueueConstructor* c : constructors) {
+		/*for (QueueConstructor* c : constructors) {
 			c->fill(*this);
-		}
+		}*/
 
-		//Find intersection of every constructor with each other
-		using ConstructorIndicesPair = std::pair<QueueConstructor::FamilyIndex, QueueConstructor::FamilyIndex>;
-		std::map<ConstructorIndicesPair, QueueConstructor::QueuFamilyIndexContainer> intersections;
+		QueueGarden garden(constructors, *this, getQueueFamilyProperties());
+		auto queueList = garden.getQueueList();
 
+		std::sort(queueList.begin(), queueList.end());
 
-		//Fill intersections between constructors
-		assert(constructors.size() >= 2);
+		do {
+			auto ql = queueList;
+			bool secusess = true;
 
-		for (int i = 0; i < constructors.size(); i++) {
-			for (int j = i + 1; j < constructors.size(); j++) {
-				auto familyIndices = constructors[i]->findIntersections(*constructors[j]);
-				intersections.insert(std::make_pair(ConstructorIndicesPair(i, j), familyIndices));
-			}
-		}
+			while (ql.size()) {
+				auto queue = ql.back();
+				ql.pop_back();
 
-		////remove intersections from each constructors' set
-		for (int i = 0; i < constructors.size(); i++) {
-			for (int j = i + 1; j < constructors.size(); j++) {
-				//If intersection fas found
-				if (intersections.count(ConstructorIndicesPair(i, j))) {
-					auto intersection = intersections.at(ConstructorIndicesPair(i, j));
-					if (intersection.size() > 0) {
-						constructors[i]->removeQueueIndexes(intersection);
-						constructors[j]->removeQueueIndexes(intersection);
-					}
+				if (garden.addQueue(queue) == false) {
+					secusess = false;
+					break;
 				}
 			}
-		}
 
-		////Extend constructors' sets with intersections to satisfy minimum requirements.
-		for (int i = 0; i < constructors.size(); i++) {
-			for (int j = i + 1; j < constructors.size(); j++) {
-				//if intersection was found
-				if (intersections.count(ConstructorIndicesPair(i, j))) {
-					auto& intersection = intersections.at(ConstructorIndicesPair(i, j));
-					if (constructors[i]->canBeSame(*constructors[j])) {
-						if (constructors[i]->_queueFamilyIndices.size() < constructors[i]->_minRequested) {
-							constructors[i]->expandWithQueueFamilies(intersection, constructors[i]->_minRequested);
-						}
-						if (constructors[j]->_queueFamilyIndices.size() < constructors[j]->_minRequested) {
-							constructors[j]->expandWithQueueFamilies(intersection, constructors[j]->_minRequested);
-						}
-					}
-					//TODO: Remove inserted values???
+			//all queues is distributed
+			if (secusess) {
+				for (const auto* q : queueList) {
+					auto constructor = q->owner;
+					constructor->_queueIndexes.insert(QueueConstructor::QueueIndexPair(q->familyIndex, q->queueIndex));
 				}
+				return true;
 			}
-		}
-
-		//Check that queue distribution satisfy minimum requirements
-		for (const auto* constructor : constructors) {
-			if (constructor->_queueFamilyIndices.size() < constructor->_minRequested) {
-				return false;
-			}
-		}
-
-		//Try to fill constructors to statisfy maximum values
-		for (int i = 0; i < constructors.size(); i++) {
-			for (int j = i + 1; j < constructors.size(); j++) {
-				//if intersection was found
-				if (intersections.count(ConstructorIndicesPair(i, j))) {
-					auto& intersection = intersections.at(ConstructorIndicesPair(i, j));
-					if (constructors[i]->canBeSame(*constructors[j])) {
-						if (constructors[i]->_queueFamilyIndices.size() < constructors[i]->_maxRequested) {
-							constructors[i]->expandWithQueueFamilies(intersection, constructors[i]->_maxRequested);
-						}
-						if (constructors[j]->_queueFamilyIndices.size() < constructors[j]->_minRequested) {
-							constructors[j]->expandWithQueueFamilies(intersection, constructors[j]->_maxRequested);
-						}
-					}
-					//TODO: Remove inserted values???
-				}
-			}
-		}
-
-		return true;
+			
+			garden.clear();
+		} while (std::next_permutation(queueList.begin(), queueList.end()));
+		
+		return false;
 	}
 
 
