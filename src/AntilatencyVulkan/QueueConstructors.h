@@ -7,8 +7,8 @@
 
 class GraphicsQueueConstructor : public QueueConstructor {
 public:
-	GraphicsQueueConstructor(int min, int max) :
-		QueueConstructor(VulkanQueueType::GRAPHICS, min, max)
+	GraphicsQueueConstructor(int min) :
+		QueueConstructor(VulkanQueueType::GRAPHICS, min)
 	{}
 
 	void fill(const VulkanPhysicalDevice& physicalDevice) override {
@@ -43,8 +43,8 @@ public:
 
 class PresentQueueConstructor : public QueueConstructor {
 public:
-	PresentQueueConstructor(const Ref<VulkanSurface>& surface, int min, int max) :
-		QueueConstructor(VulkanQueueType::PRESENT, min, max),
+	PresentQueueConstructor(const Ref<VulkanSurface>& surface, int min) :
+		QueueConstructor(VulkanQueueType::PRESENT, min),
 		_surface(surface)
 	{}
 

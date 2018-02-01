@@ -51,9 +51,8 @@ public:
 		return _type;
 	}
 
-	QueueConstructor(VulkanQueueType type, int min, int max) : 
-		_minRequested(min), 
-        _maxRequested(max),
+	QueueConstructor(VulkanQueueType type, int min) : 
+		_minRequested(min),
         _type(type)
 	{}
 
@@ -66,7 +65,7 @@ public:
 
 	VulkanQueueType _type;
 	int _minRequested = 0;
-	int _maxRequested = 0;
+	//int _maxRequested = 0;
 	std::vector<QueueConstructor*> _same;
 	QueueFamilyIndexContainer _queueIndexes;
 };
