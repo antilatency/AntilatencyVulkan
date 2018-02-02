@@ -16,42 +16,9 @@ enum class VulkanQueueType : uint32_t {
 	//...
 };
 
-VulkanQueueType& operator |=(VulkanQueueType &lhs, VulkanQueueType rhs)
-{
-	lhs = static_cast<VulkanQueueType> (
-		static_cast<std::underlying_type<VulkanQueueType>::type>(lhs) |
-		static_cast<std::underlying_type<VulkanQueueType>::type>(rhs)
-		);
-
-	return lhs;
-}
-
-VulkanQueueType& operator &=(VulkanQueueType &lhs, VulkanQueueType rhs)
-{
-	lhs = static_cast<VulkanQueueType> (
-		static_cast<std::underlying_type<VulkanQueueType>::type>(lhs) &
-		static_cast<std::underlying_type<VulkanQueueType>::type>(rhs)
-		);
-
-	return lhs;
-}
-
-VulkanQueueType operator ~(VulkanQueueType rhs)
-{
-	return static_cast<VulkanQueueType> (
-		~static_cast<std::underlying_type<VulkanQueueType>::type>(rhs)
-		);
-}
-
-VulkanQueueType operator &(VulkanQueueType lhs, VulkanQueueType rhs)
-{
-	return static_cast<VulkanQueueType> (
-		static_cast<std::underlying_type<VulkanQueueType>::type>(lhs) &
-		static_cast<std::underlying_type<VulkanQueueType>::type>(rhs)
-		);
-}
 
 class QueueConstructor;
+
 
 struct Queue {
 	VulkanQueueType type;
@@ -71,20 +38,10 @@ struct FamilyInfo {
 
 class QueueFamilyBox {
 public:
-	/*QueueFamilyBox(const std::vector<VulkanQueueType>& supportedTypes, uint32_t familyIndex, uint32_t queuesCount)  :
-                _familyIndex(familyIndex),
-                _queuesCount(queuesCount),
-                _supportedTypes(supportedTypes)
-	{
-		for (const auto type : _supportedTypes) {
-			_queuesPerType[type] = std::vector<Queue*>(_queuesCount);
-		}
-	}*/
-
-        QueueFamilyBox(const FamilyInfo& info) :
+    QueueFamilyBox(const FamilyInfo& info) :
 		_familyIndex(info.familyIndex),
-                _queuesCount(info.queueCount),
-                _supportedTypes(info.supportedTypes)
+        _queuesCount(info.queueCount),
+        _supportedTypes(info.supportedTypes)
 	{
 		for (const auto type : _supportedTypes) {
 			_queuesPerType[type] = std::vector<Queue*>(_queuesCount);
@@ -104,64 +61,13 @@ public:
         }
 	}
 	
-	//bool addQueue(Queue* q) {
-	//	//check that family supports queue type
-	//	//assert(std::find(std::begin(_supportedTypes), std::end(_supportedTypes), q->type) != std::end(_supportedTypes));
-	//	if (std::find(std::begin(_supportedTypes), std::end(_supportedTypes), q->type) == std::end(_supportedTypes)) {
-	//		return false;
-	//	}
-
-	//	//We grab last free index in array of coresponding queue type in that family.
-	//	//In other words we grab last unassigned index of queue index in family.
-
-	//	auto& queueVector = _queuesPerType[q->type];
- //       auto queuePlace = lastFreePlace(q->type);
-
-	//	//If grabbed index is out of scope in that family, we notify user that we could not place this queue in that family
-	//	if (queuePlace == _queuesCount) {
-	//		return false;
-	//	}
-
-	//	//If queue is first queue in that family, place it at bottom of the box
-	//	if (queuePlace == 0) {
-	//		queueVector[0] = q;
-	//		return true;
-	//	}
-
-	//	queueVector[queuePlace] = q;
-
-	//	//if there is an empty place to move down for a queue
-
-	//	//We start moving down a queue.
-	//	//If 
-	//	queuePlace--;
-
- //       while (queueVector[queuePlace] == nullptr && allQueuesOnIndexCanBeSame(*q, queuePlace)) {
-	//		//move down queue
-	//		queueVector[queuePlace + 1] = nullptr;
-	//		queueVector[queuePlace] = q;
-
-	//		if(queuePlace != 0) {
-	//			queuePlace--;
- //           }
- //           else {
-	//			break;
-	//		}
-	//	}	
-	//	return true;
-	//}
-
 	bool addQueue(Queue* q) {
 		//check that family supports queue type
-		//assert(std::find(std::begin(_supportedTypes), std::end(_supportedTypes), q->type) != std::end(_supportedTypes));
-		/*if (std::find(std::begin(_supportedTypes), std::end(_supportedTypes), q->type) == std::end(_supportedTypes)) {
-			return false;
-		}*/
 		if (_supportedTypes.count(q->type) == 0) {
 			return false;
 		}
 
-		//We check can we place queue on the top of the coresponding queue list?
+		//We check can we place queue on the top of the corresponding queue list?
 		//If not, we notify user that we can not place the queue, else we do so.
 		auto& queueVector = _queuesPerType[q->type];
 		if (queueVector.back() != nullptr) {
@@ -197,6 +103,8 @@ public:
 		return true;
 	}
 
+	//TODO: rewrite to more sophisticated algorithm
+	//Better to matrix.
     bool allQueuesOnIndexCanBeSame(const Queue& q, const uint32_t index) {
 		//Check if ALL queues on that place might be the same with our new queue
 		for (const auto type : _supportedTypes) {
@@ -210,16 +118,6 @@ public:
 			}
 		}
 		return true;
-	}
-
-	std::size_t lastFreePlace(const VulkanQueueType type) {
-		const auto& queueVector = _queuesPerType[type];
-		for (int j = _queuesCount - 1; j >= 0; j--) {
-			if (queueVector[j] != nullptr) {
-				return j + 1;
-			}
-		}
-		return 0;
 	}
 
 private:

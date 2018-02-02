@@ -14,7 +14,6 @@ public:
 				const std::vector<VkQueueFamilyProperties>& properties) :
 		_constructors(constructors)
     {
-		
         std::vector<FamilyInfo> familyInfos(properties.size());
 
         for (auto i = 0u; i < properties.size(); i++) {
@@ -61,6 +60,7 @@ public:
 		return _queues;
 	}
 
+private:
 	void fillQueueList() {
 		//Fill array of all nodes
 		for (const auto& qc : _constructors) {

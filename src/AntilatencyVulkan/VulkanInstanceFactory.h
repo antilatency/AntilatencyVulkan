@@ -7,27 +7,20 @@
 #include "LibraryLoader.h"
 #include "Functions/VulkanFunction.h"
 #include "Functions/VulkanFunctionGroup.h"
-#include "VulkanInstanceFactory.h"
 #include "Utils/TypeList.h"
-
-/*
-#include "Functions/Instance/vkGetInstanceProcAddr.h"
-#include "Functions/Instance/vkCreateInstance.h"
-#include "Functions/Instance/vkEnumerateInstanceLayerProperties.h"
-#include "Functions/Instance/vkEnumerateInstanceExtensionProperties.h"*/
-
 #include "VulkanInstance.h"
+
 
 VulkanInstanceFunction(vkCreateInstance) };
 VulkanInstanceFunction(vkEnumerateInstanceLayerProperties) };
 VulkanInstanceFunction(vkEnumerateInstanceExtensionProperties) };
-
 
 using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
 	vkCreateInstance,
 	vkEnumerateInstanceLayerProperties,
 	vkEnumerateInstanceExtensionProperties
 >;
+
 
 template<class SetType, class ContainerType>
 void merge_sets(SetType& first, const ContainerType& last) {
@@ -41,6 +34,7 @@ void merge_sets(SetType& first, const ContainerType& last) {
 
 //Forward declaration
 class VulkanInstanceFactory;
+
 
 template<typename... Extensions>
 class VulkanInstanceBuilder
@@ -103,7 +97,7 @@ private:
 private:
 	friend class VulkanInstanceFactory;
 
-	template<typename... Extensions>
+	template<typename... Args>
 	friend class VulkanInstanceBuilder;
 };
 
@@ -206,7 +200,7 @@ public:
 		physicalDeviceFunctions.load(loaderFunction, instance);
 
 		std::vector<std::string> vkExtensions = { createInfo.ppEnabledExtensionNames, createInfo.ppEnabledExtensionNames + createInfo.enabledExtensionCount };
-		return Ref<VulkanInstance>(new VulkanInstance(AbstractRef(this), instance, vkExtensions, instanceFunctions, physicalDeviceFunctions, Extensions()));
+		return VulkanInstance::create<Extensions>(AbstractRef(this), instance, vkExtensions, instanceFunctions, physicalDeviceFunctions);
 	}
 
 	auto getLoaderFunction() {
@@ -214,9 +208,6 @@ public:
 	}
 	
 };
-
-using VulkanInstanceFactoryRef = Ref<VulkanInstanceFactory>;
-
 
 
 template<typename ... Extensions>

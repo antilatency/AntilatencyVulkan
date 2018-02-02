@@ -82,6 +82,7 @@ protected:
 	}
 
 };
+
 using AbstractRef = Ref<RefCounter>;
 
 template<typename ... Args, typename ... EnumeratorArgs>
@@ -150,10 +151,3 @@ template<typename T, typename... Args>
 Ref<T> make_ref(Args&&... args) {
 	return Ref<T>(new T(std::forward<Args>(args)...));
 }
-
-
-//#include "Functions/VulkanFunctionGroup.h"
-//#include "Functions/VulkanFunction.h"
-//
-//#include "VulkanInstanceFactory.h"
-//#include "VulkanInstance.h"

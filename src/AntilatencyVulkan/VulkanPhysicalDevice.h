@@ -3,7 +3,7 @@
 #include "AntilatencyVulkanCommon.h"
 #include "QueueConstructor.h"
 #include "QueueGarden.h"
-
+//#include "VulkanDevice.h"
 
 
 VulkanInstanceFunction(vkGetPhysicalDeviceFeatures) };
@@ -36,46 +36,49 @@ using VulkanPhysicalDeviceFunctions = VulkanFunctionGroup<
 >;
 
 
+class VulkanInstance;
 
-class VulkanPhysicalDevice {
-	friend class VulkanSurface;
-private:
-	VulkanPhysicalDeviceFunctions* functions;
-	VkPhysicalDevice physicalDevice;
+
+class VulkanPhysicalDevice : public RefCounter {
+	friend class Ref<VulkanPhysicalDevice>;
+
 public:
-	VulkanPhysicalDevice() {}
-	VulkanPhysicalDevice(VulkanPhysicalDeviceFunctions* functions, VkPhysicalDevice physicalDevice): functions(functions), physicalDevice(physicalDevice) {
-	
+	static auto create(const Ref<VulkanInstance>& instanceRef, VulkanPhysicalDeviceFunctions* functions, const VkPhysicalDevice physicalDevice) {
+		return Ref<VulkanPhysicalDevice>(new VulkanPhysicalDevice(instanceRef, functions, physicalDevice));
 	}
 
 	VkPhysicalDeviceFeatures getFeatures() const {
 		VkPhysicalDeviceFeatures result;
-		functions->get<vkGetPhysicalDeviceFeatures>().function(physicalDevice, &result);
+		_functions->get<vkGetPhysicalDeviceFeatures>().function(_physicalDevice, &result);
 		return result;
 	}
 
 	VkPhysicalDeviceProperties getProperties() const {
 		VkPhysicalDeviceProperties result;
-		functions->get<vkGetPhysicalDeviceProperties>().function(physicalDevice, &result);
+		_functions->get<vkGetPhysicalDeviceProperties>().function(_physicalDevice, &result);
 		return result;
 	}
 
 	auto getExtensionProperties(const char* layerName = nullptr) const {
 		return vulkanEnumerate(
-			functions->get<vkEnumerateDeviceExtensionProperties>().function,
-			physicalDevice, layerName);
+			_functions->get<vkEnumerateDeviceExtensionProperties>().function,
+			_physicalDevice, layerName);
 	}
 
 	auto getLayerProperties() const {
 		return vulkanEnumerate(
-			functions->get<vkEnumerateDeviceLayerProperties>().function,
-			physicalDevice);
+			_functions->get<vkEnumerateDeviceLayerProperties>().function,
+			_physicalDevice);
 	}
 
 	auto getQueueFamilyProperties() const {
 		return vulkanEnumerate(
-			functions->get<vkGetPhysicalDeviceQueueFamilyProperties>().function,
-			physicalDevice);
+			_functions->get<vkGetPhysicalDeviceQueueFamilyProperties>().function,
+			_physicalDevice);
+	}
+
+	auto getHandle() const {
+		return _physicalDevice;
 	}
 
 	//TODO: ¬озвращать некий QueueDestribution с перегруженным оператором bool
@@ -98,7 +101,7 @@ public:
 	//	return true;
 	//}
 
-	auto distributeQueues(std::vector<QueueConstructor*>& constructors) const {
+	auto distributeQueues(std::vector<QueueConstructor*>& constructors) {
 		//Fill all queue constructors as if the all can be the same
 		/*for (QueueConstructor* c : constructors) {
 			c->fill(*this);
@@ -139,13 +142,34 @@ public:
 	}
 
 
-	auto createDevice() {
+	
+	auto beginDeviceCreation() {
 		/*VkDevice device;
 		auto function = functions->get<vkCreateDevice>().function;
 		VkDeviceCreateInfo createInfo;
 		createInfo.
 		function(physicalDevice,)*/
 	}
+
+	//template<class Extensions = NullType>
+	//auto createDevice(const VkDeviceCreateInfo& createInfo) {
+	//	VkDevice device;
+
+	//	if (functions->get<vkCreateDevice>().function(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+	//		return Ref<VulkanDevice>(nullptr);
+	//	}
+
+	//	std::vector<std::string> enabledExtensions(createInfo.ppEnabledExtensionNames, createInfo.ppEnabledExtensionNames + createInfo.enabledExtensionCount);
+	//	
+	//	std::vector< std::pair<uint32_t, uint32_t> > queues;
+
+	//	for (int i = 0; i < createInfo.queueCreateInfoCount; i++) {
+	//		const auto& queueCreateInfo = createInfo.pQueueCreateInfos[i];
+	//		queues.push_back(std::make_pair(queueCreateInfo->queueFamilyIndex, queueCreateInfo->queueCount));
+	//	}
+
+	//	return VulkanDevice::create<Extensions>(device, enabledExtensions, queues, functions);
+	//}
 
 
 
@@ -167,4 +191,15 @@ public:
 		vkCreateDevice,
 		vkEnumerateDeviceExtensionProperties,
 		vkEnumerateDeviceLayerProperties*/
+private:
+	VulkanPhysicalDevice(const Ref<VulkanInstance>& instanceRef, VulkanPhysicalDeviceFunctions* functions, const VkPhysicalDevice physicalDevice) :
+		_functions(functions),
+		_physicalDevice(physicalDevice),
+		_instanceRef(instanceRef)
+	{}
+
+private:
+	VulkanPhysicalDeviceFunctions * _functions;
+	VkPhysicalDevice _physicalDevice;
+	Ref<VulkanInstance> _instanceRef;
 };

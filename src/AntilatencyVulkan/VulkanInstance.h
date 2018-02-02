@@ -1,12 +1,16 @@
 #pragma once
+
 #include <memory>
 #include <cassert>
 #include <map>
+#include <algorithm>
+#include <type_traits>
 
-#include "VulkanInstanceFactory.h"
-#include "VulkanSurface.h"
-#include "InstanceExtensions/InstanceExtension.h"
+
 #include "Utils/TypeList.h"
+#include "InstanceExtensions/InstanceExtension.h"
+#include "VulkanPhysicalDevice.h"
+
 
 VulkanInstanceFunction(vkDestroyInstance) };
 VulkanInstanceFunction(vkEnumeratePhysicalDevices) };
@@ -46,50 +50,28 @@ using VulkanInstanceFunctions = VulkanFunctionGroup<
 //	return false;
 //}
 
+class VulkanInstanceFactory;
 
 class VulkanInstance : public RefCounter{
+
     friend class Ref<VulkanInstance>;
-	
-	using InstanceExtensionContainer = std::vector< Ref<InstanceExtension> >;
-	using VulkanNativeExtensionsContainer = std::vector< std::string >;
 	using InstanceExtensionFunctionGroupsContainer = std::map<std::string, Ref<VulkanFunctionGroupBase> >;
 
 public:
-    VkInstance _instance = VK_NULL_HANDLE;
-private:
-    //using
-
-	const AbstractRef _factory;
-    VulkanInstanceFunctions _instanceFunctions;
-
-    VulkanPhysicalDeviceFunctions _physicalDeviceFunctions;
-
-    std::vector<VulkanPhysicalDevice> _physicalDevices;
-	
-	VulkanNativeExtensionsContainer _vulkanExtensions;
-
-	InstanceExtensionFunctionGroupsContainer _functionGroups;
-
-public:
-
 	template<class Extensions = NullType>
-    VulkanInstance(
-        const AbstractRef& factory,
-        VkInstance instance,
-		std::vector<std::string> vkExtensions,
-        const VulkanInstanceFunctions& instanceFunctions,
-        const VulkanPhysicalDeviceFunctions& physicalDeviceFunctions,
-		Extensions
-    ) :
-        _factory(factory),
-		_instance(instance),
-		_vulkanExtensions(vkExtensions),
-		_instanceFunctions(instanceFunctions),
-		_physicalDeviceFunctions(physicalDeviceFunctions)
-    {
-		if constexpr(!std::is_same<Extensions, NullType>::value) {
-			_functionGroups = constructInstanceExtensionFunctionGroups<Extensions>(vkExtensions);
+	static auto create(const AbstractRef& factory,
+		const VkInstance instance,
+		const std::vector<std::string>& enabledVulkanExtensions,
+		const VulkanInstanceFunctions& instanceFunctions,
+		const VulkanPhysicalDeviceFunctions& physicalDeviceFunctions)
+	{
+		InstanceExtensionFunctionGroupsContainer functionGroups;
+
+        if constexpr (!std::is_same<Extensions, NullType>::value) {
+			functionGroups = constructInstanceExtensionFunctionGroups<Extensions>(factory, instance, enabledVulkanExtensions);
 		}
+
+		return Ref<VulkanInstance>(new VulkanInstance(factory, instance, enabledVulkanExtensions, instanceFunctions, physicalDeviceFunctions, functionGroups));
 	}
 
 
@@ -101,16 +83,15 @@ public:
 			_physicalDeviceFunctions.isAllFunctionsLoaded();
     }
 
-    std::vector<VulkanPhysicalDevice> enumeratePhysicalDevices() {
-
-        auto rawPhysicalDevices = vulkanEnumerate(
+    auto enumeratePhysicalDevices() {
+		auto rawPhysicalDevices = vulkanEnumerate(
 			_instanceFunctions.get<vkEnumeratePhysicalDevices>().function,
             _instance);
 
+        std::vector< Ref<VulkanPhysicalDevice> > physicalDevices;
 
-        std::vector<VulkanPhysicalDevice> physicalDevices(rawPhysicalDevices.size());
-        for (int i = 0; i < physicalDevices.size(); i++) {
-            physicalDevices[i] = VulkanPhysicalDevice(&_physicalDeviceFunctions, rawPhysicalDevices[i]);
+        for (const auto& rawPhysicalDevice : rawPhysicalDevices) {
+            physicalDevices.push_back(VulkanPhysicalDevice::create(Ref<VulkanInstance>(this), &_physicalDeviceFunctions, rawPhysicalDevice));
         }
         return physicalDevices;
     }
@@ -118,7 +99,7 @@ public:
 
 	template<class T>
 	auto getExtension() {
-		constexpr bool isInstanceExtension = std::is_base_of<InstanceExtension, T>::value;
+        constexpr bool isInstanceExtension = std::is_base_of<InstanceExtension, T>::value;
 		static_assert(isInstanceExtension, "T is not an InstanceExtension derived class");
 
 		const auto extensionTypeName = T::extensionTypeIdStatic();
@@ -133,29 +114,37 @@ public:
 	}
 
 
-	auto getFactory() {
-		return _factory;
+	auto getFactory() const {
+		return ref_static_cast<VulkanInstanceFactory>(_factory);
 	}
 
+	auto getHandle() const {
+		return _instance;
+	}
 
+private:
 	template<class ExtensionList, std::size_t I>
-	auto constructInstanceExtensions_impl(const std::vector<std::string>& extensions) {
+	static auto constructInstanceExtensions_impl(const AbstractRef& factory, const VkInstance instance, const std::vector<std::string>& extensions) {
 		InstanceExtensionFunctionGroupsContainer functionGroups;
 
 		using ExtensionType = typename type_at<I, ExtensionList>::type;
-        using ExtensionFunctionGroup = typename ExtensionType::FunctionGroupType;
+
+		constexpr bool isInstanceExtension = std::is_base_of<InstanceExtension, ExtensionType>::value;
+		static_assert(isInstanceExtension, "ExtensionType is not an InstanceExtension derived class");
+
+		using ExtensionFunctionGroup = typename ExtensionType::FunctionGroupType;
 
 		if (ExtensionType::canBeCreated(extensions)) {
 			Ref< ExtensionFunctionGroup > functionGroup(new ExtensionFunctionGroup);
 
-			auto loaderFunction = ref_static_cast<VulkanInstanceFactory>(getFactory())->getLoaderFunction();
-			functionGroup->load(loaderFunction, _instance);
+			auto loaderFunction = ref_static_cast<VulkanInstanceFactory>(factory)->getLoaderFunction();
+			functionGroup->load(loaderFunction, instance);
 
 			functionGroups.insert(std::make_pair(ExtensionType::extensionTypeIdStatic(), ref_static_cast<VulkanFunctionGroupBase>(functionGroup)));
 		}
 
 		if constexpr (I > 0) {
-			auto recursivelyObtainedFunctionGroups = constructInstanceExtensions_impl<ExtensionList, I - 1>(extensions);
+			auto recursivelyObtainedFunctionGroups = constructInstanceExtensions_impl<ExtensionList, I - 1>(factory, instance, extensions);
 			functionGroups.insert(recursivelyObtainedFunctionGroups.begin(), recursivelyObtainedFunctionGroups.end());
 		}
 
@@ -164,12 +153,38 @@ public:
 
 
 	template<class ExtensionList>
-	auto constructInstanceExtensionFunctionGroups(const std::vector<std::string>& extensions) {
+	static auto constructInstanceExtensionFunctionGroups(const AbstractRef& factory, const VkInstance instance, const std::vector<std::string>& extensions) {
 		constexpr std::size_t const size = length<ExtensionList>::value;
 
 		//constexpr auto extensionsRepeats = checkExtensionListForRepeats<ExtensionList, size - 1>();
 		//static_assert(!extensionsRepeats, "You extension repeats in declaration. Remove repeated extensions");
 
-		return constructInstanceExtensions_impl<ExtensionList, size - 1>(extensions);
+		return constructInstanceExtensions_impl<ExtensionList, size - 1>(factory, instance, extensions);
 	}
+
+
+	template<class Extensions = NullType>
+	VulkanInstance(
+		const AbstractRef& factory,
+		const VkInstance instance,
+		const std::vector<std::string> enabledVulkanExtensions,
+		const VulkanInstanceFunctions& instanceFunctions,
+		const VulkanPhysicalDeviceFunctions& physicalDeviceFunctions,
+		const InstanceExtensionFunctionGroupsContainer& functionGroups
+	) :
+		_factory(factory),
+		_instance(instance),
+		_instanceFunctions(instanceFunctions),
+		_physicalDeviceFunctions(physicalDeviceFunctions),
+		_functionGroups(functionGroups)
+	{}
+
+private:
+	VkInstance _instance = VK_NULL_HANDLE;
+	const AbstractRef _factory;
+
+	VulkanInstanceFunctions _instanceFunctions;
+	VulkanPhysicalDeviceFunctions _physicalDeviceFunctions;
+
+	InstanceExtensionFunctionGroupsContainer _functionGroups;
 };

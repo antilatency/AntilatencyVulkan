@@ -24,6 +24,7 @@ class WSIInstanceExtension final : public InstanceExtension {
 	friend class Ref<WSIInstanceExtension>;
 public:
 	using FunctionGroupType = WSIInstanceExtensionFunctions;
+
 public:
 	constexpr static auto requiredExtensionNamesStatic() {
 		constexpr std::array<const char*, 2> extensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
@@ -65,7 +66,7 @@ public:
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 	Ref<VulkanSurface> createSurface(HINSTANCE hinstance, HWND hwnd) {
-        auto loaderFunction = ref_static_cast<VulkanInstanceFactory>(_instanceRef->getFactory())->getLoaderFunction();
+        auto loaderFunction = _instanceRef->getFactory()->getLoaderFunction();
 
 		VkWin32SurfaceCreateInfoKHR createInfo = {};
 
@@ -75,7 +76,7 @@ public:
 
 		VkSurfaceKHR surface;
 		auto createSurfaceFunc = _functions->get<vkCreateWin32SurfaceKHR>().function;
-		createSurfaceFunc(_instanceRef->_instance, &createInfo, nullptr, &surface);
+		createSurfaceFunc(_instanceRef->getHandle(), &createInfo, nullptr, &surface);
 
 		return make_ref<VulkanSurface>(_instanceRef, surface, _surfaceInstanceExtension);
 	}

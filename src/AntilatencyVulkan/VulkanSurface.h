@@ -33,7 +33,7 @@ public:
 		for (std::size_t i = 0; i < availableFamilieProperties.size(); ++i ) {
 			VkBool32 isSupported = false;
 			
-			auto result = checkForPresent(physicalDevice.physicalDevice, i, _surface ,&isSupported);
+			auto result = checkForPresent(physicalDevice.getHandle(), i, _surface ,&isSupported);
 			assert(result == VK_SUCCESS && "Could not check present support");
 
 			if (isSupported) {
