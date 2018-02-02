@@ -22,16 +22,6 @@ using VulkanInstanceFactoryFunctions = VulkanFunctionGroup<
 >;
 
 
-template<class SetType, class ContainerType>
-void merge_sets(SetType& first, const ContainerType& last) {
-	first.insert(last.begin(), last.end());
-    //std::transform(std::begin(last), std::end(last), std::inserter(first),
-    //    [](const auto& c_str) {
-    //        return std::string(c_str);
-    //    });
-};
-
-
 //Forward declaration
 class VulkanInstanceFactory;
 
@@ -234,4 +224,4 @@ auto VulkanInstanceBuilder<Extensions...>::createInstance() {
 	createInfo.ppEnabledLayerNames = layers.data();
 
     return _factory->createInstance<TypeList<Extensions...>>(createInfo);
-}
+};

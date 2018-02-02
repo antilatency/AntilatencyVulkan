@@ -28,5 +28,5 @@ public:\
 	const char* getName() override { return #Name; }\
 	\
 	void load(PFN_vkGetDeviceProcAddr getDeviceProcAddr, VkDevice device = nullptr) {\
-		function = (Prototype)getInstanceProcAddr(instance, getName());\
+		function = (Prototype)getDeviceProcAddr(device, getName());\
 	}

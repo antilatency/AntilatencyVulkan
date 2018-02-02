@@ -151,3 +151,9 @@ template<typename T, typename... Args>
 Ref<T> make_ref(Args&&... args) {
 	return Ref<T>(new T(std::forward<Args>(args)...));
 }
+
+
+template<class SetType, class ContainerType>
+void merge_sets(SetType& first, const ContainerType& last) {
+	first.insert(last.begin(), last.end());
+}
