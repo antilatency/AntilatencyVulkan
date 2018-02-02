@@ -37,8 +37,9 @@ public:
 					   const VulkanDeviceFunctions& functions) 
 	{
 		ExtensionFunctionGroupContainer extensionFunctions;
+		
 		if constexpr (!std::is_same<Extensions, NullType>::value) {
-			extensionFunctions = constructDeviceExtensionFunctionGroups<Extensions>(enabledExtensions);
+			extensionFunctions = constructDeviceExtensionFunctionGroups<Extensions>(physicalDevice, device, enabledExtensions);
 		}
 
         auto constructedDevice = Ref<VulkanDevice>(new VulkanDevice(physicalDevice, device, extensionFunctions, /*enabledQueuesInFamilies,*/ functions));
@@ -48,6 +49,45 @@ public:
 
 	auto getHandle() const {
 		return _device;
+	}
+
+	template<class T>
+	auto getExtension() {
+
+		constexpr bool isDeviceExtension = std::is_base_of<DeviceExtension, T>::value;
+		static_assert(isDeviceExtension, "T is not an DeviceExtension derived class");
+
+		const auto extensionTypeName = T::extensionTypeIdStatic();
+
+		if (_extensionsFunctions.count(extensionTypeName)) {
+			auto& functionGroup = _extensionsFunctions.at(extensionTypeName);
+			auto typeSpecificFunctionGroup = ref_static_cast<T::FunctionGroupType>(functionGroup);
+			return T::create(Ref<VulkanDevice>(this), typeSpecificFunctionGroup.operator->());
+		}
+
+		return Ref<T>(nullptr);
+	}
+
+	auto getQueue(uint32_t familyIndex, uint32_t queueIndex) {
+		VkQueue queue;
+
+		//auto foundEntry = std::find_if(_enabledQueuesInFamilies.begin(), _enabledQueuesInFamilies.end(), [=](const auto& pair) {
+		//if family index is same and requested index is less than total available (ordered) queue.
+		//	return pair.first == familyIndex && queueIndex < pair.second;
+		//});
+
+		//auto queueWasOrdered = (foundEntry != _enabledQueuesInFamilies.end());
+
+		//if (queueWasOrdered) {
+		assert(_functions.isAllFunctionsLoaded() && "Not all functions is loaded");
+
+		_functions.get<vkGetDeviceQueue>().function(_device, familyIndex, queueIndex, &queue);
+		return queue;
+		//}
+		//else {
+		//	queue = VK_NULL_HANDLE;
+		//	return queue;
+		//}
 	}
 
 private:
@@ -64,52 +104,45 @@ private:
 	{}
 
 
-	template<class ... Extensions>
-	static auto constructDeviceExtensionFunctionGroups(const std::vector<std::string>& enabledExtensions) {
-		//TODO: create extensions
-		return ExtensionFunctionGroupContainer();
-	}
+	template<class ExtensionList, std::size_t I>
+	static auto constructDeviceExtensionFunctionGroups_impl(const Ref<VulkanPhysicalDevice> physicalDevice, const VkDevice deviceHandle, const std::vector<std::string>& extensions) {
+		ExtensionFunctionGroupContainer functionGroups;
 
+		using ExtensionType = typename type_at<I, ExtensionList>::type;
 
-	template<class T>
-	auto getExtension() {
+		constexpr bool isInstanceExtension = std::is_base_of<DeviceExtension, ExtensionType>::value;
+		static_assert(isInstanceExtension, "ExtensionType is not an DeviceExtension derived class");
 
-		constexpr bool isDeviceExtension = std::is_base_of<DeviceExtension, T>::value;
-		static_assert(isDeviceExtension, "T is not an DeviceExtension derived class");
+		using ExtensionFunctionGroup = typename ExtensionType::FunctionGroupType;
 
-		const auto extensionTypeName = T::extensionTypeIdStatic();
+		if (ExtensionType::canBeCreated(extensions)) {
+			Ref< ExtensionFunctionGroup > functionGroup(new ExtensionFunctionGroup);
 
-		if (_extensionsFunctions.count(extensionTypeName)) {
-			auto& functionGroup = _extensionsFunctions.at(extensionTypeName);
-			auto typeSpecificFunctionGroup = ref_static_cast<T::FunctionGroupType>(functionGroup);
-            return T::create(Ref<VulkanDevice>(this), typeSpecificFunctionGroup.operator->());
+			auto loaderFunction = physicalDevice->getDeviceLoaderFunction();
+			functionGroup->load(loaderFunction, deviceHandle);
+
+			functionGroups.insert(std::make_pair(ExtensionType::extensionTypeIdStatic(), ref_static_cast<VulkanFunctionGroupBase>(functionGroup)));
 		}
 
-		return Ref<T>(nullptr);
+		if constexpr (I > 0) {
+			auto recursivelyObtainedFunctionGroups = constructDeviceExtensionFunctionGroups_impl<ExtensionList, I - 1>(physicalDevice, deviceHandle, extensions);
+			functionGroups.insert(recursivelyObtainedFunctionGroups.begin(), recursivelyObtainedFunctionGroups.end());
+		}
+
+		return functionGroups;
 	}
 
-	auto getQueue(uint32_t familyIndex, uint32_t queueIndex) {
-		VkQueue queue;
 
-		//auto foundEntry = std::find_if(_enabledQueuesInFamilies.begin(), _enabledQueuesInFamilies.end(), [=](const auto& pair) {
-			//if family index is same and requested index is less than total available (ordered) queue.
-		//	return pair.first == familyIndex && queueIndex < pair.second;
-		//});
+	template<class ExtensionList>
+	static auto constructDeviceExtensionFunctionGroups(const Ref<VulkanPhysicalDevice> physicalDevice, const VkDevice deviceHandle, const std::vector<std::string>& extensions) {
+		constexpr std::size_t const size = length<ExtensionList>::value;
 
-		//auto queueWasOrdered = (foundEntry != _enabledQueuesInFamilies.end());
+		//constexpr auto extensionsRepeats = checkExtensionListForRepeats<ExtensionList, size - 1>();
+		//static_assert(!extensionsRepeats, "You extension repeats in declaration. Remove repeated extensions");
 
-		//if (queueWasOrdered) {
-        assert(_functions.isAllFunctionsLoaded() && "Not all functions is loaded");
-			
-        _functions.get<vkGetDeviceQueue>().function(_device, familyIndex, queueIndex, &queue);
-        return queue;
-		//}
-		//else {
-		//	queue = VK_NULL_HANDLE;
-		//	return queue;
-		//}
+		return constructDeviceExtensionFunctionGroups_impl<ExtensionList, size - 1>(physicalDevice, deviceHandle, extensions);
+		//return ExtensionFunctionGroupContainer();
 	}
-
 
 private:
     VkDevice _device;

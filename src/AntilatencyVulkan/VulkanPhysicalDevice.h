@@ -55,6 +55,7 @@ public:
 		constexpr auto extensionsCount = std::tuple_size<TupleType>::value;
 
 		enableExtensions_impl<TupleType, extensionsCount - 1>();
+
 		return VulkanDeviceBuilder<T...>(_physicalDevice, _enabledExtensions, _constructors);
 	}
 
@@ -148,6 +149,10 @@ public:
 
 	auto getHandle() const {
 		return _physicalDevice;
+	}
+
+	auto getDeviceLoaderFunction() const {
+		return _functions->get<vkGetDeviceProcAddr>().function;
 	}
 
 	//TODO: Возвращать некий QueueDestribution с перегруженным оператором bool
