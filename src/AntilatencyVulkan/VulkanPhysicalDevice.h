@@ -226,6 +226,10 @@ public:
 		function(physicalDevice,)*/
 	}
 
+	auto getLoaderFunction() {
+		return _functions->get<vkGetDeviceProcAddr>().function;
+	}
+
 	template<class Extensions = NullType>
 	auto createDevice(const VkDeviceCreateInfo& createInfo) {
 		VkDevice device;
@@ -376,4 +380,4 @@ auto VulkanDeviceBuilder<Extensions...>::createDevice() {
 	}
 
 	//TODO: Retrieve queue handlers and fill constructors
-};
+}

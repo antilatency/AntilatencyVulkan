@@ -43,6 +43,33 @@ public:
 		
 		return suitableFamilyIndices;
 	}
+
+	auto getHandle() {
+		return _surface;
+	}
+
+	auto getPhysicalDeviceCapabilities(const Ref<VulkanPhysicalDevice>& physicalDeviceRef) {
+		VkSurfaceCapabilitiesKHR capabilities;
+		
+		auto functionPtr = _surfaceInstanceExtension->_functions->get<vkGetPhysicalDeviceSurfaceCapabilitiesKHR>().function;
+		functionPtr(physicalDeviceRef->getHandle(),_surface, &capabilities);
+
+		return capabilities;
+	}
+
+	auto getPhysicalDeviceFormats(const Ref<VulkanPhysicalDevice>& physicalDeviceRef) {
+		auto functionPtr = _surfaceInstanceExtension->_functions->get<vkGetPhysicalDeviceSurfaceFormatsKHR>().function;
+		return vulkanEnumerate(functionPtr,
+			physicalDeviceRef->getHandle(),
+			_surface);
+	}
+
+	auto getPhysicalDevicePresentModes(const Ref<VulkanPhysicalDevice>& physicalDeviceRef) {
+		auto functionPtr = _surfaceInstanceExtension->_functions->get<vkGetPhysicalDeviceSurfacePresentModesKHR>().function;
+		return vulkanEnumerate(functionPtr,
+			physicalDeviceRef->getHandle(),
+			_surface);
+	}
 	
 	//auto getPhysicalDeviceFormats(const VulkanPhysicalDevice& physicalDevice) {
 	//	auto functionPtr = _surfaceFunctions.get<vkGetPhysicalDeviceSurfaceFormatsKHR>().function;

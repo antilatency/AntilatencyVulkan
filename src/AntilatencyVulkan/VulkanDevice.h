@@ -68,6 +68,10 @@ public:
 		return Ref<T>(nullptr);
 	}
 
+	auto getPhysicalDevice() {
+		return _physicalDevice;
+	}
+
 	auto getQueue(uint32_t familyIndex, uint32_t queueIndex) {
 		VkQueue queue;
 
