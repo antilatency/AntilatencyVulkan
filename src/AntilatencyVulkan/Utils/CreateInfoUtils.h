@@ -8,6 +8,10 @@
 
 template<class T>
 struct CreateInfoOption {
+    using Value = T;
+    using Min = T;
+    using Max = T;
+
     std::vector<T> _values;
     bool _isSoftSetup = false;
     bool _isUnset = true;
@@ -47,7 +51,7 @@ struct CreateInfoOption {
                 return !_isSoftSetup;
 	}
 
-	std::optional<T> getFirstStatisfyedRequrenments(const T& min, const T& max) {
+	std::optional<T> getFirstSatisfiedRequirements(const T& min, const T& max) {
 		for (const auto& v : _values) {
 			if (min <= v && v <= max ) {
 				return { v };
@@ -56,7 +60,16 @@ struct CreateInfoOption {
         return {};
 	}
 
-	std::optional<T> getFirstStatisfyedRequrenments(const std::vector<T>& allowedVariants) {
+    std::optional<T> getFirstSatisfiedRequirements(const T& min, const T& max, std::function<bool(const Value&, const Min&, const Max&)> comparator) {
+		for (const auto& v : _values) {
+			if (comparator(v, min, max)) {
+				return { v };
+			}
+		}
+		return {};
+	}
+
+	std::optional<T> getFirstSatisfiedRequirements(const std::vector<T>& allowedVariants) {
 		for (const auto& v : _values) {
 			if (std::find(allowedVariants.begin(), allowedVariants.end(), v) != allowedVariants.end()) {
                                 return { v };
@@ -65,7 +78,7 @@ struct CreateInfoOption {
 		return {};
 	}
 
-	std::optional<T> getFirstStatisfyedRequrenments(const std::vector<T>& allowedVariants, std::function<bool(const T, const T)> equalPredicate) const {
+	std::optional<T> getFirstSatisfiedRequirements(const std::vector<T>& allowedVariants, std::function<bool(const T, const T)> equalPredicate) const {
 		for (const auto& v : _values) {
 			auto it = std::find_if(allowedVariants.begin(), allowedVariants.end(),
 			[=](const auto av) {
@@ -131,7 +144,7 @@ struct CreateInfoOption {
 			return {};
 		}
 
-		auto val = getFirstStatisfyedRequrenments(allowedVariants);
+		auto val = getFirstSatisfiedRequirements(allowedVariants);
 		if (val) {
 			return val.value();
 		}
@@ -151,7 +164,7 @@ struct CreateInfoOption {
 			return {};
 		}
 
-		auto val = getFirstStatisfyedRequrenments(min, max);
+		auto val = getFirstSatisfiedRequirements(min, max);
 		if (val) {
 			return val.value();
 		}

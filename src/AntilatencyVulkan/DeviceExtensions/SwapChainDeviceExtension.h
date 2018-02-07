@@ -60,73 +60,88 @@ public:
 
 	//---Present mode-----
 
-	auto& setPresentMode(VkPresentModeKHR presentMode) {
+	auto& requiredPresentMode(VkPresentModeKHR presentMode) {
 		_presentMode = CreateInfoOption<VkPresentModeKHR>(presentMode, false);
 		return *this;
 	}
 
-	auto& setPresentMode(std::initializer_list<VkPresentModeKHR> presentModes) {
+	auto& requiredOneOfPresentModes(std::initializer_list<VkPresentModeKHR> presentModes) {
 		_presentMode = CreateInfoOption<VkPresentModeKHR>(presentModes, false);
 		return *this;
 	}
 
-	auto& advicePresentMode(VkPresentModeKHR presentMode) {
+	auto& desiredPresentMode(VkPresentModeKHR presentMode) {
 		_presentMode = CreateInfoOption<VkPresentModeKHR>(presentMode, true);
 		return *this;
 	}
 
-	auto& advicePresentMode(std::initializer_list<VkPresentModeKHR> presentModes) {
+	auto& desiredOneOfPresentModes(std::initializer_list<VkPresentModeKHR> presentModes) {
 		_presentMode = CreateInfoOption<VkPresentModeKHR>(presentModes, true);
 		return *this;
 	}
 
 	//---Surface format-----
 
-	auto& setSurfaceFormat(VkSurfaceFormatKHR surfaceFormat) {
+	auto& requiredSurfaceFormat(VkSurfaceFormatKHR surfaceFormat) {
 		_surfaceFormat = CreateInfoOption<VkSurfaceFormatKHR>(surfaceFormat, false);
 		return *this;
 	}
 
-	auto& setSurfaceFormat(std::initializer_list<VkSurfaceFormatKHR> surfaceFormats) {
+	auto& requiredOneOfSurfaceFormats(std::initializer_list<VkSurfaceFormatKHR> surfaceFormats) {
 		_surfaceFormat = CreateInfoOption<VkSurfaceFormatKHR>(surfaceFormats, false);
 		return *this;
 	}
 
-	auto& adviceSurfaceFormat(VkSurfaceFormatKHR surfaceFormat) {
+	auto& desiredSurfaceFormat(VkSurfaceFormatKHR surfaceFormat) {
 		_surfaceFormat = CreateInfoOption<VkSurfaceFormatKHR>(surfaceFormat, true);
 		return *this;
 	}
 
-	auto& adviceSurfaceFormat(std::initializer_list<VkSurfaceFormatKHR> surfaceFormats) {
+	auto& desiredSurfaceFormats(std::initializer_list<VkSurfaceFormatKHR> surfaceFormats) {
 		_surfaceFormat = CreateInfoOption<VkSurfaceFormatKHR>(surfaceFormats, true);
 		return *this;
 	}
 
 	//---Swap extent----
 
-	auto& adviceSwapExtent(VkExtent2D swapExtent) {
+	auto& requiredSwapExtent(VkExtent2D swapExtent) {
+		_swapExtent = CreateInfoOption<VkExtent2D>(swapExtent, false);
+		return *this;
+	}
+
+	auto& requiredOneOfSwapExtent(std::initializer_list<VkExtent2D> swapExtents) {
+		_swapExtent = CreateInfoOption<VkExtent2D>(swapExtents, false);
+		return *this;
+	}
+
+	auto& desiredSwapExtent(VkExtent2D swapExtent) {
 		_swapExtent = CreateInfoOption<VkExtent2D>(swapExtent, true);
+		return *this;
+	}
+
+	auto& desiredOneOfSwapExtents(std::initializer_list<VkExtent2D> swapExtents) {
+		_swapExtent = CreateInfoOption<VkExtent2D>(swapExtents, true);
 		return *this;
 	}
 
 	//---Min image count----
 
-	auto& setMinImageCount(uint32_t minImageCount) {
+	auto& requiredMinImageCount(uint32_t minImageCount) {
 		_minImageCount = CreateInfoOption<uint32_t>(minImageCount, false);
 		return *this;
 	}
 
-	auto& setMinImageCount(std::initializer_list<uint32_t> minImagesCount) {
+	auto& requiredOneOfMinImageCounts(std::initializer_list<uint32_t> minImagesCount) {
 		_minImageCount = CreateInfoOption<uint32_t>(minImagesCount, false);
 		return *this;
 	}
 
-	auto& adviceMinImageCount(uint32_t minImageCount) {
+	auto& desiredMinImageCount(uint32_t minImageCount) {
 		_minImageCount = CreateInfoOption<uint32_t>(minImageCount, true);
 		return *this;
 	}
 
-	auto& adviceMinImageCount(std::initializer_list<uint32_t> minImagesCount) {
+	auto& desiredOneOfMinImageCount(std::initializer_list<uint32_t> minImagesCount) {
 		_minImageCount = CreateInfoOption<uint32_t>(minImagesCount, true);
 		return *this;
 	}
@@ -142,18 +157,14 @@ private:
 	bool _clipped = VK_FALSE; //+
 	uint32_t _imageArrayLayers = 1; //+
 	VkImageUsageFlags _imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; //+
-	
-	//Unique behavior
-	//VkExtent2D _swapExtent = { (std::numeric_limits<uint32_t>::max)(), (std::numeric_limits<uint32_t>::max)() };
-	CreateInfoOption<VkExtent2D> _swapExtent;
 
 	VkSurfaceTransformFlagBitsKHR _preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 	VkCompositeAlphaFlagBitsKHR _compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
 	std::vector<QueueFamilyIndex> _allowedQueuesFamilies;
-
-	
-	//Available set/advice and Value, Enumeration
+		
+	//Available declaring requirements/desires and using as a single value or as an ordered list
+	CreateInfoOption<VkExtent2D> _swapExtent;
 	CreateInfoOption<uint32_t> _minImageCount;
 	CreateInfoOption<VkPresentModeKHR> _presentMode;
 	CreateInfoOption<VkSurfaceFormatKHR>  _surfaceFormat;
@@ -241,9 +252,9 @@ auto SwapChainBuilder::createSwapChain() {
 	createInfo.compositeAlpha = _compositeAlpha;
 
 	if (_allowedQueuesFamilies.size() < 2) {
-		createInfo.pQueueFamilyIndices = nullptr;
-		createInfo.queueFamilyIndexCount = 0;
-		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		createInfo.pQueueFamilyIndices = nullptr; // optional
+		createInfo.queueFamilyIndexCount = 0; //optional
+		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE; 
 	}
 	else {
 		createInfo.pQueueFamilyIndices = _allowedQueuesFamilies.data();
@@ -276,7 +287,7 @@ auto SwapChainBuilder::createSwapChain() {
 			return Ref<VulkanSwapChain>(nullptr);
 		}
 		_presentMode = CreateInfoOption<VkPresentModeKHR>(SwapChainBuilder::DEFAULT_PRESENT_MODES, true);
-		if (auto value = _presentMode.getFirstStatisfyedRequrenments(presentModes)) {
+		if (auto value = _presentMode.getFirstSatisfiedRequirements(presentModes)) {
 			selectedPresentMode = *value;
 		}
 		else {
@@ -314,23 +325,37 @@ auto SwapChainBuilder::createSwapChain() {
 			}
 			else {
 				//On this platform manual setup of extent size is impossible
-				return Ref<VulkanSwapChain>(nullptr);
+				auto requestedExtentMatchPlatform = _swapExtent.getFirstSatisfiedRequirements( { surfaceCapabilities.currentExtent }, 
+					[](const auto& a, const auto& b) {
+						return a.width == b.width && a.height == b.height;
+					});
+
+
+				if (requestedExtentMatchPlatform) {
+					selectedSwapExtent = requestedExtentMatchPlatform.value();
+				}
+				else {
+					return Ref<VulkanSwapChain>(nullptr);
+				}
 			}
 		}
 		else {
 			//On that platform manual setup is allowed
-			if (_swapExtent.isSoft()) {
-				selectedSwapExtent.width = (std::max)(surfaceCapabilities.minImageExtent.width,
-					(std::min)(surfaceCapabilities.maxImageExtent.width, _swapExtent._values[0].width));
-				selectedSwapExtent.height = (std::max)(surfaceCapabilities.minImageExtent.height,
-					(std::min)(surfaceCapabilities.maxImageExtent.height, _swapExtent._values[0].height));
+			auto extentFound = _swapExtent.getFirstSatisfiedRequirements(surfaceCapabilities.minImageExtent, surfaceCapabilities.maxImageExtent,
+																				[](const auto& value, const auto& minV, const auto& maxV) {
+																					return  (minV.width  <= value.width)   &&  (value.width <= maxV.width)  &&
+																						    (minV.height <= value.height)  &&  (value.height <= maxV.height);
+																				});
+			if (extentFound) {
+				selectedSwapExtent = extentFound.value();
 			}
 			else {
-				//if swapchain satisfy all requirenments
-				if (surfaceCapabilities.minImageExtent.width <= _swapExtent._values[0].width &&  _swapExtent._values[0].width <= surfaceCapabilities.maxImageExtent.width &&
-					surfaceCapabilities.minImageExtent.height <= _swapExtent._values[0].height &&  _swapExtent._values[0].height <= surfaceCapabilities.maxImageExtent.height)
-				{
-					selectedSwapExtent = _swapExtent._values[0];
+				if (_swapExtent.isSoft()) {
+					//Get first value and trim it to satisfy requirements
+					selectedSwapExtent.width = (std::max)(surfaceCapabilities.minImageExtent.width,
+						(std::min)(surfaceCapabilities.maxImageExtent.width, _swapExtent._values[0].width));
+					selectedSwapExtent.height = (std::max)(surfaceCapabilities.minImageExtent.height,
+						(std::min)(surfaceCapabilities.maxImageExtent.height, _swapExtent._values[0].height));
 				}
 				else {
 					return Ref<VulkanSwapChain>(nullptr);
@@ -353,7 +378,7 @@ auto SwapChainBuilder::createSwapChain() {
 			selectedMinImageCount = _minImageCount._values[0];
 		}
 		else {
-			if (auto imageCount = _minImageCount.getFirstStatisfyedRequrenments(surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount)) {
+			if (auto imageCount = _minImageCount.getFirstSatisfiedRequirements(surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount)) {
 				selectedMinImageCount = imageCount.value();
 			}
 			else if (_minImageCount.isHardAssignment()) {
@@ -395,7 +420,7 @@ auto SwapChainBuilder::createSwapChain() {
 			selectedFormat = _surfaceFormat._values[0];
 		}
 		else {
-			if (auto format = _surfaceFormat.getFirstStatisfyedRequrenments(surfaceFormats,
+			if (auto format = _surfaceFormat.getFirstSatisfiedRequirements(surfaceFormats,
 				[](const auto& a, const auto& b) {
 					return (static_cast<uint32_t>(a.format) == static_cast<uint32_t>(b.format)) && 
 						   (static_cast<uint32_t>(a.colorSpace) == static_cast<uint32_t>(b.colorSpace));
