@@ -12,10 +12,6 @@ struct CreateInfoOption {
     using Min = T;
     using Max = T;
 
-    std::vector<T> _values;
-    bool _isSoftSetup = false;
-    bool _isUnset = true;
-
 	CreateInfoOption() 
 	{}
 
@@ -43,7 +39,7 @@ struct CreateInfoOption {
 		return _values.size() == 1;
 	}
 
-	bool isSoft() const {
+	bool isSoftAssignment() const {
 		return _isSoftSetup;
 	}
 
@@ -51,7 +47,7 @@ struct CreateInfoOption {
                 return !_isSoftSetup;
 	}
 
-	std::optional<T> getFirstSatisfiedRequirements(const T& min, const T& max) {
+	std::optional<T> getFirstSatisfiedRequirements(const T& min, const T& max) const {
 		for (const auto& v : _values) {
 			if (min <= v && v <= max ) {
 				return { v };
@@ -60,7 +56,7 @@ struct CreateInfoOption {
         return {};
 	}
 
-    std::optional<T> getFirstSatisfiedRequirements(const T& min, const T& max, std::function<bool(const Value&, const Min&, const Max&)> comparator) {
+    std::optional<T> getFirstSatisfiedRequirements(const T& min, const T& max, std::function<bool(const Value&, const Min&, const Max&)> comparator) const {
 		for (const auto& v : _values) {
 			if (comparator(v, min, max)) {
 				return { v };
@@ -69,7 +65,7 @@ struct CreateInfoOption {
 		return {};
 	}
 
-	std::optional<T> getFirstSatisfiedRequirements(const std::vector<T>& allowedVariants) {
+	std::optional<T> getFirstSatisfiedRequirements(const std::vector<T>& allowedVariants) const {
 		for (const auto& v : _values) {
 			if (std::find(allowedVariants.begin(), allowedVariants.end(), v) != allowedVariants.end()) {
                                 return { v };
@@ -93,7 +89,7 @@ struct CreateInfoOption {
 	}
 
 	template<class U>
-	T getClosest(const T& min, const T& max, std::function<U> distanceFunc) {
+	T getClosest(const T& min, const T& max, std::function<U> distanceFunc) const {
 		std::vector<int32_t> distancesPerValue(_values.size());
 		
 		for (int i = 0; i < _values.size(); i++) {
@@ -109,7 +105,7 @@ struct CreateInfoOption {
 
 
 	template<class U>
-	T getClosest(const std::vector<T>& allowedVariants, std::function<U> distanceFunc) {
+	T getClosest(const std::vector<T>& allowedVariants, std::function<U> distanceFunc) const {
 		using Distance = int32_t;
 		using IndexOfAlwailableValue = uint32_t;
 		using ValueToAllowedDistanceEntry = std::pair<Distance, IndexOfAlwailableValue>;
@@ -139,7 +135,7 @@ struct CreateInfoOption {
 		return _values[indexOfClosestValue];
 	}
 
-	std::optional<T> selectValue(const std::vector<T> allowedVariants, std::function<uint32_t(const T&, const T&)> distanceFunc) {
+	std::optional<T> selectValue(const std::vector<T> allowedVariants, std::function<uint32_t(const T&, const T&)> distanceFunc) const {
 		if (allowedVariants.size() == 0 || _values.size() == 0 || isUnset()) {
 			return {};
 		}
@@ -158,8 +154,7 @@ struct CreateInfoOption {
 		}
 	}
 
-	//template<class U>
-	std::optional<T> selectValue(const T& min, const T& max, std::function<uint32_t(const T&, const T&, const T&)> distanceFunc) {
+	std::optional<T> selectValue(const T& min, const T& max, std::function<uint32_t(const T&, const T&, const T&)> distanceFunc) const {
 		if (allowedVariants.size() == 0 || _values.size() == 0 || isUnset()) {
 			return {};
 		}
@@ -181,4 +176,17 @@ struct CreateInfoOption {
 	auto isUnset() const {
 		return _isUnset;
 	}
+
+    const auto& getValues() const {
+        return _values;
+    }
+
+    std::size_t getValuesCount() const {
+        return _values.size();
+    }
+
+private:
+    std::vector<T> _values;
+    bool _isSoftSetup = false;
+    bool _isUnset = true;
 };
