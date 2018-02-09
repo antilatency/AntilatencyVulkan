@@ -263,7 +263,7 @@ private:
 			return Ref<VulkanSwapChain>(nullptr);
 		}
 
-		return VulkanSwapChain::create(swapChainHandle, _deviceRef, _functions);
+		return VulkanSwapChain::create(swapChainHandle, createInfo.imageFormat, _deviceRef, _functions);
 	}
 
 private:

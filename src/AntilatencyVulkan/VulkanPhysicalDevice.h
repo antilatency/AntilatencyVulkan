@@ -230,6 +230,10 @@ public:
 		return _functions->get<vkGetDeviceProcAddr>().function;
 	}
 
+    auto getInstance() {
+        return _instanceRef;
+    }
+
 	template<class Extensions = NullType>
 	auto createDevice(const VkDeviceCreateInfo& createInfo) {
 		VkDevice device;

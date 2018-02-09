@@ -12,10 +12,16 @@
 
 VulkanDeviceFunction(vkDestroyDevice) };
 VulkanDeviceFunction(vkGetDeviceQueue) };
+VulkanDeviceFunction( vkCreateImageView ) };
+VulkanDeviceFunction( vkDestroyImage ) };
+VulkanDeviceFunction( vkDestroyImageView ) };
 
 using VulkanDeviceFunctions = VulkanFunctionGroup<
 	vkDestroyDevice,
-	vkGetDeviceQueue
+	vkGetDeviceQueue,
+    vkCreateImageView,
+    vkDestroyImage,
+    vkDestroyImageView
 >;
 
 class VulkanPhysicalDevice;
@@ -93,6 +99,11 @@ public:
 		//	return queue;
 		//}
 	}
+
+    template<class Function, class ... Args>
+    auto invokeVulkanFunction( Args&& ... args) {
+        return _functions.get<Function>().function( _device, std::forward<Args>( args )... );
+    }
 
 private:
 	VulkanDevice(const Ref<VulkanPhysicalDevice> physicalDevice,
