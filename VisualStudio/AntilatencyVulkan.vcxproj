@@ -90,8 +90,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.65.0\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.65.1\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -106,8 +107,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.65.0\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.65.1\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,8 +126,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.65.0\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.65.1\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,8 +147,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.65.0\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\AntilatencyVulkan;C:\VulkanSDK\1.0.65.1\Include\vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,14 +162,40 @@
     <ClCompile Include="AntilatencyVulkan.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\AntilatencyVulkan.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\AntilatencyVulkanCommon.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Builders\SwapChainImageViewBuilder.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\DeviceExtensions\DeviceExtensions.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\InstanceExtensions\InstanceExtensions.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\QueueGarden.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Utils\CreateInfoUtils.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanDevice.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\DeviceExtensions\DeviceExtension.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\DeviceExtensions\SwapChainDeviceExtension.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\Functions\VulkanFunction.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Functions\VulkanFunctionGroup.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\InstanceExtensions\InstanceExtension.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\InstanceExtensions\SurfaceInstanceExtension.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\InstanceExtensions\WSIInstanceExtension.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\LibraryLoader.h" />
-    <ClInclude Include="..\src\AntilatencyVulkan\VulkanFunctionGroup.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\QueueConstructor.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\QueueConstructors.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\QueueFamilyBox.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\Utils\TypeList.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanImage.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanImageView.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\VulkanInstance.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\VulkanInstanceFactory.h" />
     <ClInclude Include="..\src\AntilatencyVulkan\VulkanPhysicalDevice.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanRenderPass.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanSurface.h" />
+    <ClInclude Include="..\src\AntilatencyVulkan\VulkanSwapChain.h" />
     <ClInclude Include="..\Utils\WindowWin32.h" />
+    <ClInclude Include="MPLUtils.h" />
+    <ClInclude Include="PhysicalDeviceSelector.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\AntilatencyVulkan\Builders\SwapChainImageViewBuilder.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
